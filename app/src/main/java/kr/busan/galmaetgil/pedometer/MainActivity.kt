@@ -30,10 +30,10 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private lateinit var tvDistance: TextView
     private lateinit var tvCalories: TextView
     private lateinit var tvGpsStatus: TextView
-    private lateinit var btnMap: Button
+    private lateinit var btnMap: TextView      // 수정됨
     
     private lateinit var etMemo: EditText
-    private lateinit var btnSaveMemo: Button
+    private lateinit var btnSaveMemo: TextView // 수정됨
     private lateinit var layoutMemos: LinearLayout
     
     private var gpsTracker: GalmaetgilGpsTracker? = null
@@ -41,9 +41,10 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        try {
-            setContentView(R.layout.activity_main)
+        // 화면을 가장 먼저 띄웁니다 (하얀 화면 방지)
+        setContentView(R.layout.activity_main)
 
+        try {
             tvStepCount = findViewById(R.id.tvStepCount)
             tvProgressPercent = findViewById(R.id.tvProgressPercent)
             progressBarSteps = findViewById(R.id.progressBarSteps)
