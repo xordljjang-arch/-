@@ -18,12 +18,16 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Gradle 설치 및 Wrapper 생성
+    - name: Gradle Wrapper를 최신 버전(8.5)으로 강제 변경
       run: |
-        sudo apt-get update
-        sudo apt-get install -y gradle
-        gradle wrapper
-        chmod +x gradlew
+        mkdir -p gradle/wrapper
+        echo "distributionBase=GRADLE_USER_HOME" > gradle/wrapper/gradle-wrapper.properties
+        echo "distributionPath=wrapper/dists" >> gradle/wrapper/gradle-wrapper.properties
+        echo "distributionUrl=https\://services.gradle.org/distributions/gradle-8.5-bin.zip" >> gradle/wrapper/gradle-wrapper.properties
+        echo "zipStoreBase=GRADLE_USER_HOME" >> gradle/wrapper/gradle-wrapper.properties
+        echo "zipStorePath=wrapper/dists" >> gradle/wrapper/gradle-wrapper.properties
+        gradle wrapper --gradle-version 8.5 || true
+        chmod +x gradlew || true
 
     - name: 디버그 APK 빌드하기
       run: ./gradlew assembleDebug --no-daemon
