@@ -26,12 +26,7 @@ class GalmaetgilGpsTracker(private val context: Context) : LocationListener {
 
             if (isGPSEnabled || isNetworkEnabled) {
                 if (isNetworkEnabled) {
-                    locationManager.requestLocationUpdates(
-                        LocationManager.NETWORK_PROVIDER,
-                        10000L,
-                        10f,
-                        this
-                    )
+                    locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 10000L, 10f, this)
                     location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
                     location?.let {
                         latitude = it.latitude
@@ -40,12 +35,7 @@ class GalmaetgilGpsTracker(private val context: Context) : LocationListener {
                 }
                 if (isGPSEnabled) {
                     if (location == null) {
-                        locationManager.requestLocationUpdates(
-                            LocationManager.GPS_PROVIDER,
-                            10000L,
-                            10f,
-                            this
-                        )
+                        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10000L, 10f, this)
                         location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
                         location?.let {
                             latitude = it.latitude
