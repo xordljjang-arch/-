@@ -10,6 +10,7 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.net.Uri
 import android.os.Bundle
+import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -42,7 +43,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // UI 연결
+        // UI 요소 연결
         tvStepCount = findViewById(R.id.tvStepCount)
         tvProgressPercent = findViewById(R.id.tvProgressPercent)
         progressBarSteps = findViewById(R.id.progressBarSteps)
@@ -56,15 +57,14 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
         checkPermissions()
 
-        // 센서 초기화
+        // 센서 및 GPS 초기화
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
         stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
 
-        // GPS 초기화
         gpsTracker = GalmaetgilGpsTracker(this)
         updateGpsLocation()
 
-        // 지도 버튼 클릭 시 (스마트폰 지도 앱 호출)
+        // 지도 버튼 클릭 이벤트
         btnMap.setOnClickListener {
             if (gpsTracker.canGetLocation()) {
                 val uri = "geo:${gpsTracker.latitude},${gpsTracker.longitude}?q=${gpsTracker.latitude},${gpsTracker.longitude}(현재위치)"
@@ -75,7 +75,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             }
         }
 
-        // 메모 기능 연결
+        // 메모 로드 및 저장 이벤트
         loadMemos()
         btnSaveMemo.setOnClickListener {
             val text = etMemo.text.toString()
@@ -127,7 +127,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 prefs.edit().putInt("BASE_$currentDate", baselineSteps).apply()
                 todaySteps = 0
             }
-
             updateUI()
         }
     }
@@ -135,12 +134,10 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private fun updateUI() {
         tvStepCount.text = String.format("%,d", todaySteps)
         
-        // 시각적 프로그레스 및 퍼센트
         progressBarSteps.progress = todaySteps
         val percent = (todaySteps / 10000.0) * 100
         tvProgressPercent.text = "${percent.toInt()}% 달성"
 
-        // 이동 거리 및 소모 열량 계산 (보폭 0.7m, 1보당 0.04kcal 가정)
         val distanceKm = (todaySteps * 0.7) / 1000.0
         val calories = (todaySteps * 0.04).toInt()
 
@@ -148,7 +145,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         tvCalories.text = "$calories kcal"
     }
 
-    // --- 메모 기능 (로컬 저장) ---
     private fun saveMemo(content: String) {
         val prefs = getSharedPreferences("MemoPrefs", Context.MODE_PRIVATE)
         val time = SimpleDateFormat("MM월 dd일 a hh:mm", Locale.KOREA).format(Date())
@@ -175,7 +171,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             }
             layoutMemos.addView(textView)
             
-            // 구분선 추가
             val divider = View(this).apply {
                 layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 2)
                 setBackgroundColor(android.graphics.Color.parseColor("#EEEEEE"))
