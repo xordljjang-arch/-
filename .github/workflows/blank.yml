@@ -18,8 +18,11 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Gradle Wrapper 권한 부여
+    - name: Gradle 설치 및 Wrapper 생성
       run: |
+        sudo apt-get update
+        sudo apt-get install -y gradle
+        gradle wrapper
         chmod +x gradlew
 
     - name: 디버그 APK 빌드하기
