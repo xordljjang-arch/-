@@ -15,6 +15,7 @@
             android:orientation="vertical"
             android:padding="16dp">
 
+            <!-- 상단 걸음수 카드 -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -98,6 +99,7 @@
                 </RelativeLayout>
             </LinearLayout>
 
+            <!-- 3가지 통계 박스 -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -115,8 +117,8 @@
                     android:gravity="center"
                     android:padding="12dp"
                     android:layout_marginRight="4dp">
-                    <TextView android:text="이동 거리" android:textSize="12sp"/>
-                    <TextView android:id="@+id/tvDistance" android:text="0.0 km" android:textSize="18sp" android:textStyle="bold" android:textColor="#111"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="이동 거리" android:textSize="12sp"/>
+                    <TextView android:id="@+id/tvDistance" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0.0 km" android:textSize="18sp" android:textStyle="bold" android:textColor="#111"/>
                 </LinearLayout>
 
                 <LinearLayout
@@ -130,8 +132,8 @@
                     android:padding="12dp"
                     android:layout_marginRight="4dp"
                     android:layout_marginLeft="4dp">
-                    <TextView android:text="소모 열량" android:textSize="12sp"/>
-                    <TextView android:id="@+id/tvCalories" android:text="0 kcal" android:textSize="18sp" android:textStyle="bold" android:textColor="#E65100"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="소모 열량" android:textSize="12sp"/>
+                    <TextView android:id="@+id/tvCalories" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0 kcal" android:textSize="18sp" android:textStyle="bold" android:textColor="#E65100"/>
                 </LinearLayout>
 
                 <LinearLayout
@@ -144,11 +146,12 @@
                     android:gravity="center"
                     android:padding="12dp"
                     android:layout_marginLeft="4dp">
-                    <TextView android:text="갈맷길 도장" android:textSize="12sp"/>
-                    <TextView android:text="0 / 6개" android:textSize="18sp" android:textStyle="bold" android:textColor="#D32F2F"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="갈맷길 도장" android:textSize="12sp"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0 / 6개" android:textSize="18sp" android:textStyle="bold" android:textColor="#D32F2F"/>
                 </LinearLayout>
             </LinearLayout>
 
+            <!-- 현재 걷는 갈맷길 카드 -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -189,17 +192,22 @@
                         android:textColor="#0277BD"
                         android:textSize="13sp"
                         android:layout_centerVertical="true"/>
-                    <Button
+                    <!-- Button 대신 안전한 TextView 버튼 사용 -->
+                    <TextView
                         android:id="@+id/btnMap"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentRight="true"
+                        android:layout_centerVertical="true"
                         android:background="#0277BD"
-                        android:textColor="#FFF"
+                        android:textColor="#FFFFFF"
+                        android:padding="8dp"
+                        android:textStyle="bold"
                         android:text="지도 보기"/>
                 </RelativeLayout>
             </LinearLayout>
 
+            <!-- 메모 카드 -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -228,16 +236,20 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:hint="여기에 메모를 입력하세요"
-                        android:background="#F5F5F5"
+                        android:background="@android:color/transparent"
                         android:padding="12dp"
                         android:textSize="14sp"/>
-                    <Button
+                    <TextView
                         android:id="@+id/btnSaveMemo"
                         android:layout_width="wrap_content"
                         android:layout_height="match_parent"
                         android:text="저장"
                         android:background="#F57C00"
-                        android:textColor="#FFF"
+                        android:textColor="#FFFFFF"
+                        android:gravity="center"
+                        android:paddingLeft="16dp"
+                        android:paddingRight="16dp"
+                        android:textStyle="bold"
                         android:layout_marginLeft="8dp"/>
                 </LinearLayout>
 
