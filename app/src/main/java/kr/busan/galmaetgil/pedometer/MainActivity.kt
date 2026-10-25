@@ -36,53 +36,54 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private lateinit var btnSaveMemo: Button
     private lateinit var layoutMemos: LinearLayout
     
-    private lateinit var gpsTracker: GalmaetgilGpsTracker
+    private var gpsTracker: GalmaetgilGpsTracker? = null
     private var todaySteps = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        try {
+            setContentView(R.layout.activity_main)
 
-        // UI 요소 연결
-        tvStepCount = findViewById(R.id.tvStepCount)
-        tvProgressPercent = findViewById(R.id.tvProgressPercent)
-        progressBarSteps = findViewById(R.id.progressBarSteps)
-        tvDistance = findViewById(R.id.tvDistance)
-        tvCalories = findViewById(R.id.tvCalories)
-        tvGpsStatus = findViewById(R.id.tvGpsStatus)
-        btnMap = findViewById(R.id.btnMap)
-        etMemo = findViewById(R.id.etMemo)
-        btnSaveMemo = findViewById(R.id.btnSaveMemo)
-        layoutMemos = findViewById(R.id.layoutMemos)
+            tvStepCount = findViewById(R.id.tvStepCount)
+            tvProgressPercent = findViewById(R.id.tvProgressPercent)
+            progressBarSteps = findViewById(R.id.progressBarSteps)
+            tvDistance = findViewById(R.id.tvDistance)
+            tvCalories = findViewById(R.id.tvCalories)
+            tvGpsStatus = findViewById(R.id.tvGpsStatus)
+            btnMap = findViewById(R.id.btnMap)
+            etMemo = findViewById(R.id.etMemo)
+            btnSaveMemo = findViewById(R.id.btnSaveMemo)
+            layoutMemos = findViewById(R.id.layoutMemos)
 
-        checkPermissions()
+            checkPermissions()
+            initSensors()
+            initGpsSafe()
 
-        // 센서 및 GPS 초기화
-        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
-        stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
-
-        gpsTracker = GalmaetgilGpsTracker(this)
-        updateGpsLocation()
-
-        // 지도 버튼 클릭 이벤트
-        btnMap.setOnClickListener {
-            if (gpsTracker.canGetLocation()) {
-                val uri = "geo:${gpsTracker.latitude},${gpsTracker.longitude}?q=${gpsTracker.latitude},${gpsTracker.longitude}(현재위치)"
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(uri))
-                startActivity(intent)
-            } else {
-                Toast.makeText(this, "GPS 신호를 찾을 수 없습니다.", Toast.LENGTH_SHORT).show()
+            loadMemos()
+            btnSaveMemo.setOnClickListener {
+                val text = etMemo.text.toString()
+                if (text.isNotEmpty()) {
+                    saveMemo(text)
+                    etMemo.text.clear()
+                }
             }
-        }
 
-        // 메모 로드 및 저장 이벤트
-        loadMemos()
-        btnSaveMemo.setOnClickListener {
-            val text = etMemo.text.toString()
-            if (text.isNotEmpty()) {
-                saveMemo(text)
-                etMemo.text.clear()
+            btnMap.setOnClickListener {
+                try {
+                    if (gpsTracker?.canGetLocation() == true) {
+                        val lat = gpsTracker!!.latitude
+                        val lon = gpsTracker!!.longitude
+                        val uri = "geo:$lat,$lon?q=$lat,$lon(현재위치)"
+                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(uri)))
+                    } else {
+                        Toast.makeText(this, "GPS 위치를 찾는 중입니다.", Toast.LENGTH_SHORT).show()
+                    }
+                } catch (e: Exception) {
+                    Toast.makeText(this, "지도 앱을 열 수 없습니다.", Toast.LENGTH_SHORT).show()
+                }
             }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
@@ -93,47 +94,68 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         }
     }
 
-    private fun updateGpsLocation() {
-        if (gpsTracker.canGetLocation()) {
-            tvGpsStatus.text = "현재 좌표: ${String.format("%.4f", gpsTracker.latitude)}, ${String.format("%.4f", gpsTracker.longitude)}"
+    private fun initSensors() {
+        try {
+            sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+            stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun initGpsSafe() {
+        try {
+            gpsTracker = GalmaetgilGpsTracker(this)
+            if (gpsTracker?.canGetLocation() == true) {
+                val lat = gpsTracker!!.latitude
+                val lon = gpsTracker!!.longitude
+                tvGpsStatus.text = "현재 좌표: ${String.format("%.4f", lat)}, ${String.format("%.4f", lon)}"
+            }
+        } catch (e: Exception) {
+            tvGpsStatus.text = "GPS 초기화 지연 중..."
         }
     }
 
     override fun onResume() {
         super.onResume()
-        stepSensor?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_UI) }
+        try {
+            stepSensor?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_UI) }
+        } catch (e: Exception) {}
     }
 
     override fun onPause() {
         super.onPause()
-        sensorManager.unregisterListener(this)
+        try {
+            sensorManager.unregisterListener(this)
+        } catch (e: Exception) {}
     }
 
     override fun onSensorChanged(event: SensorEvent?) {
-        if (event?.sensor?.type == Sensor.TYPE_STEP_COUNTER) {
-            val absoluteSteps = event.values[0].toInt()
-            val prefs = getSharedPreferences("StepPrefs", Context.MODE_PRIVATE)
-            val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-            var baselineSteps = prefs.getInt("BASE_$currentDate", -1)
+        try {
+            if (event?.sensor?.type == Sensor.TYPE_STEP_COUNTER) {
+                val absoluteSteps = event.values[0].toInt()
+                val prefs = getSharedPreferences("StepPrefs", Context.MODE_PRIVATE)
+                val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+                var baselineSteps = prefs.getInt("BASE_$currentDate", -1)
 
-            if (baselineSteps == -1) {
-                baselineSteps = absoluteSteps
-                prefs.edit().putInt("BASE_$currentDate", baselineSteps).apply()
-            }
+                if (baselineSteps == -1) {
+                    baselineSteps = absoluteSteps
+                    prefs.edit().putInt("BASE_$currentDate", baselineSteps).apply()
+                }
 
-            todaySteps = absoluteSteps - baselineSteps
-            if (todaySteps < 0) {
-                baselineSteps = absoluteSteps
-                prefs.edit().putInt("BASE_$currentDate", baselineSteps).apply()
-                todaySteps = 0
+                todaySteps = absoluteSteps - baselineSteps
+                if (todaySteps < 0) {
+                    baselineSteps = absoluteSteps
+                    prefs.edit().putInt("BASE_$currentDate", baselineSteps).apply()
+                    todaySteps = 0
+                }
+                updateUI()
             }
-            updateUI()
-        }
+        } catch (e: Exception) {}
     }
 
     private fun updateUI() {
         tvStepCount.text = String.format("%,d", todaySteps)
-        
         progressBarSteps.progress = todaySteps
         val percent = (todaySteps / 10000.0) * 100
         tvProgressPercent.text = "${percent.toInt()}% 달성"
@@ -158,25 +180,27 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     }
 
     private fun loadMemos() {
-        layoutMemos.removeAllViews()
-        val prefs = getSharedPreferences("MemoPrefs", Context.MODE_PRIVATE)
-        val memos = prefs.getString("MEMO_LIST", "")?.split("||")?.filter { it.isNotEmpty() } ?: listOf()
+        try {
+            layoutMemos.removeAllViews()
+            val prefs = getSharedPreferences("MemoPrefs", Context.MODE_PRIVATE)
+            val memos = prefs.getString("MEMO_LIST", "")?.split("||")?.filter { it.isNotEmpty() } ?: listOf()
 
-        for (memo in memos) {
-            val textView = TextView(this).apply {
-                text = memo
-                textSize = 14f
-                setPadding(20, 20, 20, 20)
-                setBackgroundColor(android.graphics.Color.parseColor("#FFFFF0"))
+            for (memo in memos) {
+                val textView = TextView(this).apply {
+                    text = memo
+                    textSize = 14f
+                    setPadding(20, 20, 20, 20)
+                    setBackgroundColor(android.graphics.Color.parseColor("#FFFFF0"))
+                }
+                layoutMemos.addView(textView)
+                
+                val divider = View(this).apply {
+                    layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 2)
+                    setBackgroundColor(android.graphics.Color.parseColor("#EEEEEE"))
+                }
+                layoutMemos.addView(divider)
             }
-            layoutMemos.addView(textView)
-            
-            val divider = View(this).apply {
-                layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 2)
-                setBackgroundColor(android.graphics.Color.parseColor("#EEEEEE"))
-            }
-            layoutMemos.addView(divider)
-        }
+        } catch (e: Exception) {}
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
