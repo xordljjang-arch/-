@@ -2,18 +2,16 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="kr.busan.galmaetgil.pedometer">
 
-    <!-- 1. 만보기(걸음 수 측정) 센서 권한 필수 추가 -->
+    <!-- 만보기 및 GPS 권한 -->
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
-    
-    <!-- 2. GPS 위치 확인 권한 필수 추가 -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@android:drawable/sym_def_app_icon"
+        android:roundIcon="@android:drawable/sym_def_app_icon"
         android:label="부산 갈맷길 만보기"
-        android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
         
@@ -27,5 +25,4 @@
         </activity>
         
     </application>
-
 </manifest>
