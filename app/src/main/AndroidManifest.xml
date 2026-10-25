@@ -2,32 +2,30 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="kr.busan.galmaetgil.pedometer">
 
-    <!-- 만보기 걸음 센서 및 어르신 보행 인식 권한 -->
+    <!-- 1. 만보기(걸음 수 측정) 센서 권한 필수 추가 -->
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
-    <!-- 부산 갈맷길 코스를 따라 걸은 위치 확인용 GPS 권한 -->
+    
+    <!-- 2. GPS 위치 확인 권한 필수 추가 -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <!-- 순위표 동기화 및 스타일 로드용 인터넷 권한 -->
-    <uses-permission android:name="android.permission.INTERNET" />
-
-    <uses-feature android:name="android.hardware.sensor.stepcounter" android:required="false" />
-    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
 
     <application
         android:allowBackup="true"
-        android:label="갈맷길 백세만보"
+        android:icon="@mipmap/ic_launcher"
+        android:label="부산 갈맷길 만보기"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:usesCleartextTraffic="true"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
-
+        
         <activity
             android:name=".MainActivity"
-            android:exported="true"
-            android:screenOrientation="portrait">
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        
     </application>
+
 </manifest>
