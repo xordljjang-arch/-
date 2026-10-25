@@ -1,78 +1,275 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp"
-    android:background="#F5F6F8">
+    android:background="#F4F6F8">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="🚶 시니어 건강 만보기"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:gravity="center"
-        android:textColor="#111111"
-        android:paddingBottom="16dp"/>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@android:color/white"
-        android:elevation="4dp"
-        android:padding="20dp"
-        android:orientation="vertical"
-        android:gravity="center">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="오늘의 걸음 수"
-            android:textSize="18sp"
-            android:textColor="#555555"/>
-
-        <TextView
-            android:id="@+id/tvStepCount"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="0"
-            android:textSize="65sp"
-            android:textStyle="bold"
-            android:textColor="#0066CC"/>
-
-        <Button
-            android:id="@+id/btnHistory"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="📅 최근 30일 기록 보기"
-            android:layout_marginTop="10dp"/>
-    </LinearLayout>
-
-    <TextView
-        android:id="@+id/tvGpsStatus"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="GPS 위치: 확인 중..."
-        android:textSize="14sp"
-        android:paddingTop="12dp"
-        android:gravity="center"
-        android:textColor="#777777"/>
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="🗺️ 갈맷길 코스 (누르면 펼쳐집니다)"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:textColor="#222222"
-        android:paddingTop="20dp"
-        android:paddingBottom="10dp"/>
-
-    <ExpandableListView
-        android:id="@+id/expandableListView"
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:divider="@android:color/darker_gray"
-        android:dividerHeight="1dp" />
-</LinearLayout>
+        android:layout_above="@+id/bottomNav">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- 상단 걸음수 카드 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/white"
+                android:elevation="4dp"
+                android:orientation="vertical"
+                android:padding="20dp"
+                android:layout_marginBottom="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:background="#E8F5E9"
+                    android:padding="6dp"
+                    android:text="🟢 정상 걸음 인증됨 (공정 랭킹 반영 중)"
+                    android:textColor="#2E7D32"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="16dp"
+                    android:text="오늘 걸은 걸음 수"
+                    android:textColor="#555555"
+                    android:textSize="16sp" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:orientation="horizontal">
+                    <TextView
+                        android:id="@+id/tvStepCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0"
+                        android:textColor="#112233"
+                        android:textSize="60sp"
+                        android:textStyle="bold" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text=" 보"
+                        android:textColor="#112233"
+                        android:textSize="24sp"
+                        android:textStyle="bold"
+                        android:layout_gravity="bottom"
+                        android:layout_marginBottom="12dp"/>
+                </LinearLayout>
+
+                <!-- 프로그레스 바 -->
+                <ProgressBar
+                    android:id="@+id/progressBarSteps"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="20dp"
+                    android:max="10000"
+                    android:progress="0"
+                    android:progressTint="#00A86B"
+                    android:layout_marginTop="10dp"/>
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="일일 목표: 10,000보"
+                        android:textColor="#333333"
+                        android:textStyle="bold"/>
+                    <TextView
+                        android:id="@+id/tvProgressPercent"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentRight="true"
+                        android:text="0% 달성"
+                        android:textColor="#00A86B"
+                        android:textStyle="bold"/>
+                </RelativeLayout>
+            </LinearLayout>
+
+            <!-- 3가지 통계 박스 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:weightSum="3"
+                android:layout_marginBottom="16dp">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@android:color/white"
+                    android:elevation="2dp"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:padding="12dp"
+                    android:layout_marginRight="4dp">
+                    <TextView android:text="이동 거리" android:textSize="12sp"/>
+                    <TextView android:id="@+id/tvDistance" android:text="0.0 km" android:textSize="18sp" android:textStyle="bold" android:textColor="#111"/>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@android:color/white"
+                    android:elevation="2dp"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:padding="12dp"
+                    android:layout_marginRight="4dp"
+                    android:layout_marginLeft="4dp">
+                    <TextView android:text="소모 열량" android:textSize="12sp"/>
+                    <TextView android:id="@+id/tvCalories" android:text="0 kcal" android:textSize="18sp" android:textStyle="bold" android:textColor="#E65100"/>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@android:color/white"
+                    android:elevation="2dp"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:padding="12dp"
+                    android:layout_marginLeft="4dp">
+                    <TextView android:text="갈맷길 도장" android:textSize="12sp"/>
+                    <TextView android:text="0 / 6개" android:textSize="18sp" android:textStyle="bold" android:textColor="#D32F2F"/>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- 현재 걷는 갈맷길 카드 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="#E1F5FE"
+                android:elevation="2dp"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:layout_marginBottom="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="#0277BD"
+                    android:textColor="#FFF"
+                    android:text="현재 걷는 갈맷길"
+                    android:padding="4dp"
+                    android:textSize="12sp"
+                    android:textStyle="bold"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="2-1구간 (오륙도~광안리)"
+                    android:textColor="#111"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="8dp"/>
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp">
+                    <TextView
+                        android:id="@+id/tvGpsStatus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="GPS 위치 탐색 중..."
+                        android:textColor="#0277BD"
+                        android:textSize="13sp"
+                        android:layout_centerVertical="true"/>
+                    <Button
+                        android:id="@+id/btnMap"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentRight="true"
+                        android:backgroundTint="#0277BD"
+                        android:textColor="#FFF"
+                        android:text="지도/도장 보기 ➔"/>
+                </RelativeLayout>
+            </LinearLayout>
+
+            <!-- 메모 카드 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/white"
+                android:elevation="2dp"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:layout_marginBottom="30dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📝 오늘의 건강/산책 한줄 메모"
+                    android:textColor="#111"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+                    <EditText
+                        android:id="@+id/etMemo"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:hint="예: 바닷바람이 시원해서 기분 최고!"
+                        android:background="@android:drawable/edit_text"
+                        android:padding="12dp"
+                        android:textSize="14sp"/>
+                    <Button
+                        android:id="@+id/btnSaveMemo"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:text="저장"
+                        android:backgroundTint="#F57C00"
+                        android:textColor="#FFF"
+                        android:layout_marginLeft="8dp"/>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/layoutMemos"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="16dp"/>
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- 하단 네비게이션 바 (가짜 UI) -->
+    <LinearLayout
+        android:id="@+id/bottomNav"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_alignParentBottom="true"
+        android:background="#1C2331"
+        android:orientation="horizontal"
+        android:weightSum="4">
+        
+        <TextView android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:text="오늘걸음" android:textColor="#111" android:background="#FFCA28" android:gravity="center" android:textStyle="bold"/>
+        <TextView android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:text="갈맷길도장" android:textColor="#FFF" android:gravity="center"/>
+        <TextView android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:text="공정순위" android:textColor="#FFF" android:gravity="center"/>
+        <TextView android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:text="제작원리" android:textColor="#FFF" android:gravity="center"/>
+    </LinearLayout>
+</RelativeLayout>
