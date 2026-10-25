@@ -7,7 +7,6 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
-import android.location.Location
 import android.os.Bundle
 import android.widget.ArrayAdapter
 import android.widget.ListView
@@ -16,13 +15,15 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class MainActivity : AppCompatActivity(), SensorEventListener {
 
     private lateinit var sensorManager: SensorManager
     private var stepSensor: Sensor? = null
     private var isSensorPresent = false
-    private var totalSteps = 0
 
     private lateinit var tvStepCount: TextView
     private lateinit var tvGpsStatus: TextView
@@ -33,7 +34,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 간단하고 직관적인 레이아웃을 코드로 직접 구성 (어르신용 큰 글씨)
+        // 어르신용 큰 글씨 UI 구성
         val linearLayout = android.widget.LinearLayout(this).apply {
             orientation = android.widget.LinearLayout.VERTICAL
             setPadding(40, 40, 40, 40)
@@ -84,7 +85,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
         setContentView(linearLayout)
 
-        // 권한 체크 및 요청
+        // 권한 체크
         checkPermissions()
 
         // 만보기 센서 초기화
@@ -100,14 +101,14 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         gpsTracker = GalmaetgilGpsTracker(this)
         updateGpsLocation()
 
-        // 전체 코스 데이터 연결 (아까 만든 CourseRepository의 데이터 활용)
+        // 전체 코스 데이터 연결 (CourseRepository의 데이터 활용)
         val courseNames = galmaetgilSubCourses.map { "${it.name} (${it.distance})\n- ${it.description}" }
         val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, courseNames)
         listViewCourses.adapter = adapter
 
         listViewCourses.setOnItemClickListener { _, _, position, _ ->
             val selected = galmaetgilSubCourses[position]
-            Toast.MakedText(this, "선택된 코스: ${selected.name}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "선택된 코스: ${selected.name}", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -148,8 +149,33 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     override fun onSensorChanged(event: SensorEvent?) {
         if (event?.sensor?.type == Sensor.TYPE_STEP_COUNTER) {
-            totalSteps = event.values[0].toInt()
-            tvStepCount.text = "오늘의 걸음수: ${totalSteps}보"
+            val absoluteSteps = event.values[0].toInt()
+
+            // 자정 초기화를 위한 날짜 및 기준값 처리
+            val prefs = getSharedPreferences("PedometerPrefs", Context.MODE_PRIVATE)
+            val savedDate = prefs.getString("SAVED_DATE", "")
+            val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+            var baselineSteps = prefs.getInt("BASELINE_STEPS", -1)
+
+            // 날짜가 바뀌었거나 첫 실행인 경우 오늘 시작점(기준값) 재설정
+            if (savedDate != currentDate || baselineSteps == -1) {
+                baselineSteps = absoluteSteps
+                prefs.edit()
+                    .putString("SAVED_DATE", currentDate)
+                    .putInt("BASELINE_STEPS", baselineSteps)
+                    .apply()
+            }
+
+            // 오늘 실제 걸은 걸음 수 계산
+            var todaySteps = absoluteSteps - baselineSteps
+            if (todaySteps < 0) {
+                // 기기 재부팅 등으로 센서가 초기화된 경우 보정
+                baselineSteps = absoluteSteps
+                prefs.edit().putInt("BASELINE_STEPS", baselineSteps).apply()
+                todaySteps = 0
+            }
+
+            tvStepCount.text = "오늘의 걸음수: ${todaySteps}보"
         }
     }
 
