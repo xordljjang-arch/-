@@ -1,20 +1,16 @@
 package kr.busan.galmaetgil.pedometer
 
 import android.Manifest
-import android.app.AlertDialog
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.net.Uri
 import android.os.Bundle
-import android.view.View
-import android.view.ViewGroup
-import android.widget.BaseExpandableListAdapter
-import android.widget.Button
-import android.widget.ExpandableListView
-import android.widget.TextView
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -26,51 +22,67 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     private lateinit var sensorManager: SensorManager
     private var stepSensor: Sensor? = null
-    private var isSensorPresent = false
-
+    
     private lateinit var tvStepCount: TextView
+    private lateinit var tvProgressPercent: TextView
+    private lateinit var progressBarSteps: ProgressBar
+    private lateinit var tvDistance: TextView
+    private lateinit var tvCalories: TextView
     private lateinit var tvGpsStatus: TextView
-    private lateinit var btnHistory: Button
-    private lateinit var expandableListView: ExpandableListView
+    private lateinit var btnMap: Button
+    
+    private lateinit var etMemo: EditText
+    private lateinit var btnSaveMemo: Button
+    private lateinit var layoutMemos: LinearLayout
+    
     private lateinit var gpsTracker: GalmaetgilGpsTracker
-
-    private val mainCourses = listOf("1코스 (임랑~오륙도)", "2코스 (오륙도~부산역)", "3코스 (부산역~태종대)", "4코스 (남항대교~다대포)", "5코스 (을숙도~가덕도)", "6코스 (낙동강~태백사)", "7코스 (구포역~온천천)", "8코스 (온천천~장안사)", "9코스 (회동수원지)")
-    private val subCourses = mapOf(
-        "1코스 (임랑~오륙도)" to listOf("1-1코스: 일광해수욕장 방면 [진행: 🟩⬜⬜⬜]", "1-2코스: 오륙도 방면 [진행: ⬜⬜⬜⬜]"),
-        "2코스 (오륙도~부산역)" to listOf("2-1코스: 광안리 방면 [진행: ⬜⬜⬜⬜]", "2-2코스: 부산역 방면 [진행: ⬜⬜⬜⬜]"),
-        "3코스 (부산역~태종대)" to listOf("3-1코스: 영도 절영해안 [진행: ⬜⬜⬜⬜]", "3-2코스: 태종대 방면 [진행: ⬜⬜⬜⬜]"),
-        "4코스 (남항대교~다대포)" to listOf("4-1코스: 암남공원 방면 [진행: ⬜⬜⬜⬜]", "4-2코스: 다대포 방면 [진행: ⬜⬜⬜⬜]"),
-        "5코스 (을숙도~가덕도)" to listOf("5-1코스: 녹산수문 방면 [진행: ⬜⬜⬜⬜]", "5-2코스: 가덕도 방면 [진행: ⬜⬜⬜⬜]"),
-        "6코스 (낙동강~태백사)" to listOf("6-1코스: 삼락공원 방면", "6-2코스: 화명공원 방면", "6-3코스: 태백사 방면"),
-        "7코스 (구포역~온천천)" to listOf("7-1코스: 금정산성 방면", "7-2코스: 범어사 방면", "7-3코스: 온천천 방면"),
-        "8코스 (온천천~장안사)" to listOf("8-1코스: 회동수원지 입구", "8-2코스: 정관읍 방면", "8-3코스: 장안사 방면"),
-        "9코스 (회동수원지)" to listOf("9-1코스: 선동 방면", "9-2코스: 오륜대 방면", "9-3코스: 철마 방면", "9-4코스: 순환 구간")
-    )
+    private var todaySteps = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        // UI 연결
         tvStepCount = findViewById(R.id.tvStepCount)
+        tvProgressPercent = findViewById(R.id.tvProgressPercent)
+        progressBarSteps = findViewById(R.id.progressBarSteps)
+        tvDistance = findViewById(R.id.tvDistance)
+        tvCalories = findViewById(R.id.tvCalories)
         tvGpsStatus = findViewById(R.id.tvGpsStatus)
-        btnHistory = findViewById(R.id.btnHistory)
-        expandableListView = findViewById(R.id.expandableListView)
+        btnMap = findViewById(R.id.btnMap)
+        etMemo = findViewById(R.id.etMemo)
+        btnSaveMemo = findViewById(R.id.btnSaveMemo)
+        layoutMemos = findViewById(R.id.layoutMemos)
 
         checkPermissions()
 
+        // 센서 초기화
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
-        if (sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER) != null) {
-            stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
-            isSensorPresent = true
-        }
+        stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
 
+        // GPS 초기화
         gpsTracker = GalmaetgilGpsTracker(this)
         updateGpsLocation()
 
-        expandableListView.setAdapter(CourseExpandableAdapter(this, mainCourses, subCourses))
+        // 지도 버튼 클릭 시 (스마트폰 지도 앱 호출)
+        btnMap.setOnClickListener {
+            if (gpsTracker.canGetLocation()) {
+                val uri = "geo:${gpsTracker.latitude},${gpsTracker.longitude}?q=${gpsTracker.latitude},${gpsTracker.longitude}(현재위치)"
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(uri))
+                startActivity(intent)
+            } else {
+                Toast.makeText(this, "GPS 신호를 찾을 수 없습니다.", Toast.LENGTH_SHORT).show()
+            }
+        }
 
-        btnHistory.setOnClickListener {
-            showMonthlyHistory()
+        // 메모 기능 연결
+        loadMemos()
+        btnSaveMemo.setOnClickListener {
+            val text = etMemo.text.toString()
+            if (text.isNotEmpty()) {
+                saveMemo(text)
+                etMemo.text.clear()
+            }
         }
     }
 
@@ -83,18 +95,18 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     private fun updateGpsLocation() {
         if (gpsTracker.canGetLocation()) {
-            tvGpsStatus.text = "현재 GPS: 위도 ${gpsTracker.latitude}, 경도 ${gpsTracker.longitude}"
+            tvGpsStatus.text = "현재 좌표: ${String.format("%.4f", gpsTracker.latitude)}, ${String.format("%.4f", gpsTracker.longitude)}"
         }
     }
 
     override fun onResume() {
         super.onResume()
-        if (isSensorPresent) sensorManager.registerListener(this, stepSensor, SensorManager.SENSOR_DELAY_UI)
+        stepSensor?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_UI) }
     }
 
     override fun onPause() {
         super.onPause()
-        if (isSensorPresent) sensorManager.unregisterListener(this)
+        sensorManager.unregisterListener(this)
     }
 
     override fun onSensorChanged(event: SensorEvent?) {
@@ -109,75 +121,68 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 prefs.edit().putInt("BASE_$currentDate", baselineSteps).apply()
             }
 
-            var todaySteps = absoluteSteps - baselineSteps
+            todaySteps = absoluteSteps - baselineSteps
             if (todaySteps < 0) {
                 baselineSteps = absoluteSteps
                 prefs.edit().putInt("BASE_$currentDate", baselineSteps).apply()
                 todaySteps = 0
             }
 
-            // 오늘 걸음수 화면 및 기록 저장
-            tvStepCount.text = todaySteps.toString()
-            prefs.edit().putInt("RECORD_$currentDate", todaySteps).apply()
+            updateUI()
         }
     }
 
-    private fun showMonthlyHistory() {
-        val prefs = getSharedPreferences("StepPrefs", Context.MODE_PRIVATE)
-        val historyMap = prefs.all.filterKeys { it.startsWith("RECORD_") }
+    private fun updateUI() {
+        tvStepCount.text = String.format("%,d", todaySteps)
         
-        val historyText = if (historyMap.isEmpty()) {
-            "아직 저장된 걷기 기록이 없습니다."
-        } else {
-            historyMap.entries.sortedByDescending { it.key }
-                .joinToString("\n") { "${it.key.replace("RECORD_", "")} : ${it.value}보" }
-        }
+        // 시각적 프로그레스 및 퍼센트
+        progressBarSteps.progress = todaySteps
+        val percent = (todaySteps / 10000.0) * 100
+        tvProgressPercent.text = "${percent.toInt()}% 달성"
 
-        AlertDialog.Builder(this)
-            .setTitle("📅 최근 걷기 기록")
-            .setMessage(historyText)
-            .setPositiveButton("확인", null)
-            .show()
+        // 이동 거리 및 소모 열량 계산 (보폭 0.7m, 1보당 0.04kcal 가정)
+        val distanceKm = (todaySteps * 0.7) / 1000.0
+        val calories = (todaySteps * 0.04).toInt()
+
+        tvDistance.text = String.format("%.1f km", distanceKm)
+        tvCalories.text = "$calories kcal"
+    }
+
+    // --- 메모 기능 (로컬 저장) ---
+    private fun saveMemo(content: String) {
+        val prefs = getSharedPreferences("MemoPrefs", Context.MODE_PRIVATE)
+        val time = SimpleDateFormat("MM월 dd일 a hh:mm", Locale.KOREA).format(Date())
+        val currentMemos = prefs.getString("MEMO_LIST", "") ?: ""
+        
+        val newMemo = "[$time] $content"
+        val updatedMemos = if (currentMemos.isEmpty()) newMemo else "$newMemo||$currentMemos"
+        
+        prefs.edit().putString("MEMO_LIST", updatedMemos).apply()
+        loadMemos()
+    }
+
+    private fun loadMemos() {
+        layoutMemos.removeAllViews()
+        val prefs = getSharedPreferences("MemoPrefs", Context.MODE_PRIVATE)
+        val memos = prefs.getString("MEMO_LIST", "")?.split("||")?.filter { it.isNotEmpty() } ?: listOf()
+
+        for (memo in memos) {
+            val textView = TextView(this).apply {
+                text = memo
+                textSize = 14f
+                setPadding(20, 20, 20, 20)
+                setBackgroundColor(android.graphics.Color.parseColor("#FFFFF0"))
+            }
+            layoutMemos.addView(textView)
+            
+            // 구분선 추가
+            val divider = View(this).apply {
+                layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 2)
+                setBackgroundColor(android.graphics.Color.parseColor("#EEEEEE"))
+            }
+            layoutMemos.addView(divider)
+        }
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
-}
-
-class CourseExpandableAdapter(
-    private val context: Context,
-    private val mainList: List<String>,
-    private val subList: Map<String, List<String>>
-) : BaseExpandableListAdapter() {
-
-    override fun getGroupCount(): Int = mainList.size
-    override fun getChildrenCount(groupPosition: Int): Int = subList[mainList[groupPosition]]?.size ?: 0
-    override fun getGroup(groupPosition: Int): Any = mainList[groupPosition]
-    override fun getChild(groupPosition: Int, childPosition: Int): Any = subList[mainList[groupPosition]]!![childPosition]
-    override fun getGroupId(groupPosition: Int): Long = groupPosition.toLong()
-    override fun getChildId(groupPosition: Int, childPosition: Int): Long = childPosition.toLong()
-    override fun hasStableIds(): Boolean = false
-    override fun isChildSelectable(groupPosition: Int, childPosition: Int): Boolean = true
-
-    override fun getGroupView(groupPosition: Int, isExpanded: Boolean, convertView: View?, parent: ViewGroup?): View {
-        val title = getGroup(groupPosition) as String
-        val textView = TextView(context).apply {
-            text = "▶ $title"
-            textSize = 20f
-            setPadding(60, 40, 40, 40)
-            setTextColor(android.graphics.Color.parseColor("#111111"))
-            setTypeface(null, android.graphics.Typeface.BOLD)
-        }
-        return textView
-    }
-
-    override fun getChildView(groupPosition: Int, childPosition: Int, isLastChild: Boolean, convertView: View?, parent: ViewGroup?): View {
-        val detail = getChild(groupPosition, childPosition) as String
-        val textView = TextView(context).apply {
-            text = detail
-            textSize = 16f
-            setPadding(100, 30, 40, 30)
-            setTextColor(android.graphics.Color.parseColor("#444444"))
-        }
-        return textView
-    }
 }
