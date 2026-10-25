@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>갈맷길 백세만보 - 어르신 맞춤형 부산 갈맷길 만보기</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Noto+Sans+KR:wght@500;700;900&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Noto Sans KR', 'Inter', sans-serif;
+      background-color: #f1f5f9;
+      color: #0f172a;
+      overflow-x: hidden;
+    }
+    .senior-large {
+      font-size: 112%;
+    }
+    .senior-large .step-num {
+      font-size: 3.5rem !important;
+      line-height: 1.1 !important;
+    }
+    .stamp-badge {
+      transform: rotate(-8deg);
+      box-shadow: 0 0 0 3px #dc2626, inset 0 0 0 2px #dc2626;
+      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .stamp-pop {
+      animation: popIn 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    @keyframes popIn {
+      0% { transform: scale(2.4) rotate(-20deg); opacity: 0; }
+      70% { transform: scale(0.92) rotate(-6deg); opacity: 1; }
+      100% { transform: scale(1) rotate(-8deg); opacity: 1; }
+    }
+    .pulse-ring {
+      animation: pulseRing 2s infinite;
+    }
+    @keyframes pulseRing {
+      0% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.45); }
+      70% { box-shadow: 0 0 0 12px rgba(22, 163, 74, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-start py-2 px-2 sm:py-6 sm:px-4">
+
+  <!-- App Container (Mobile Frame Responsive) -->
+  <div id="appRoot" class="w-full max-w-md bg-white rounded-3xl shadow-2xl border-2 border-slate-200 overflow-hidden flex flex-col min-h-[92vh]">
+
+    <!-- Top Accessibility Header -->
+    <header class="bg-slate-900 text-white px-4 py-3.5 flex items-center justify-between border-b-2 border-amber-400">
+      <div class="flex items-center gap-2.5">
+        <span class="w-10 h-10 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center font-black text-xl shadow">🌊</span>
+        <div>
+          <h1 class="font-black text-lg sm:text-xl tracking-tight leading-tight text-amber-300">갈맷길 백세만보</h1>
+          <p class="text-xs text-slate-300 font-medium">부산 어르신 건강 트래킹 · 공정 랭킹</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <button id="btnTtsToggle" type="button" class="px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold text-xs border border-slate-600 flex items-center gap-1" title="음성 안내 켜기/끄기">
+          <span id="ttsIcon">🔊</span>
+          <span id="ttsLabel">음성켜짐</span>
+        </button>
+        <button id="btnFontToggle" type="button" class="px-2.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs shadow">
+          글씨 크게+
+        </button>
+      </div>
+    </header>
+
+    <!-- Toast Notification Banner -->
+    <div id="toastBanner" class="hidden bg-emerald-700 text-white px-4 py-3 text-sm font-bold flex items-center justify-between transition-all">
+      <span id="toastText">안내 메시지</span>
+      <button id="btnCloseToast" type="button" class="ml-3 px-2 py-0.5 rounded bg-emerald-900 text-xs">닫기</button>
+    </div>
+
+    <!-- Main Content Views -->
+    <main class="flex-1 overflow-y-auto p-4 space-y-4">
+
+      <!-- TAB 1: 오늘 걸음 (시니어 만보기 홈) -->
+      <section id="viewHome" class="space-y-4">
+        <!-- Daily Step Hero Card -->
+        <div class="bg-gradient-to-b from-amber-50 to-orange-50 border-2 border-amber-300 rounded-3xl p-5 text-center shadow-sm relative">
+          <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-900 font-extrabold text-xs mb-2 border border-emerald-300">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-600 pulse-ring"></span>
+            <span id="stepStatusBadge">정상 걸음 인증됨 (공정 랭킹 반영 중)</span>
+          </div>
+
+          <p class="text-slate-600 font-bold text-base mt-1">오늘 걸은 걸음 수</p>
+          <div class="my-2">
+            <span id="todaySteps" class="step-num font-black text-5xl sm:text-6xl text-slate-900 tracking-tight">6,420</span>
+            <span class="text-xl font-extrabold text-slate-700 ml-1">보</span>
+          </div>
+
+          <div class="w-full bg-slate-200 h-5 rounded-full overflow-hidden border border-slate-300 my-3">
+            <div id="stepProgressBar" class="bg-gradient-to-r from-amber-500 to-emerald-600 h-full transition-all duration-300" style="width: 64%"></div>
+          </div>
+          <div class="flex justify-between text-sm font-bold text-slate-700">
+            <span>일일 목표: <strong class="text-slate-900">10,000보</strong></span>
+            <span id="stepGoalPercent" class="text-emerald-700 font-black">64% 달성</span>
+          </div>
+
+          <!-- Big Senior Action Buttons -->
+          <div class="grid grid-cols-2 gap-2.5 mt-4">
+            <button id="btnWalkSim" type="button" class="py-3.5 px-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white font-black text-base shadow-md flex items-center justify-center gap-1.5">
+              <span>👟</span> <span>+500보 걷기 체험</span>
+            </button>
+            <button id="btnVoiceRead" type="button" class="py-3.5 px-3 rounded-2xl bg-slate-800 hover:bg-slate-900 text-amber-300 font-black text-base shadow-md flex items-center justify-center gap-1.5">
+              <span>📢</span> <span>성적 읽어주기</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 3 Big Stat Cards for Seniors -->
+        <div class="grid grid-cols-3 gap-2.5">
+          <div class="bg-slate-50 border-2 border-slate-200 rounded-2xl p-3 text-center">
+            <p class="text-xs font-bold text-slate-500">이동 거리</p>
+            <p id="statKm" class="text-xl font-black text-slate-900 mt-1">4.1<span class="text-xs font-bold ml-0.5">km</span></p>
+          </div>
+          <div class="bg-slate-50 border-2 border-slate-200 rounded-2xl p-3 text-center">
+            <p class="text-xs font-bold text-slate-500">소모 열량</p>
+            <p id="statKcal" class="text-xl font-black text-orange-600 mt-1">218<span class="text-xs font-bold ml-0.5">kcal</span></p>
+          </div>
+          <div class="bg-slate-50 border-2 border-slate-200 rounded-2xl p-3 text-center">
+            <p class="text-xs font-bold text-slate-500">갈맷길 도장</p>
+            <p id="statStamps" class="text-xl font-black text-rose-600 mt-1">3<span class="text-xs font-bold ml-0.5">/ 6개</span></p>
+          </div>
+        </div>
+
+        <!-- Active Galmaet-gil Course Quick Banner -->
+        <div class="bg-sky-50 border-2 border-sky-300 rounded-2xl p-4 flex items-center justify-between">
+          <div>
+            <span class="text-xs font-black px-2 py-0.5 rounded bg-sky-700 text-white">현재 걷는 갈맷길</span>
+            <h2 id="homeActiveCourseTitle" class="font-black text-base text-slate-900 mt-1">2-1구간 (송정~해운대~민락교)</h2>
+            <p id="homeActiveCourseProgress" class="text-sm font-bold text-sky-800">GPS 경로 달성률: 65% (70% 이상 시 도장 발급!)</p>
+          </div>
+          <button id="btnGoGalmaetgil" type="button" class="px-3.5 py-2.5 rounded-xl bg-sky-700 hover:bg-sky-800 text-white font-black text-sm shrink-0 shadow">
+            지도/도장 보기 →
+          </button>
+        </div>
+
+        <!-- Quick Daily Health Memo -->
+        <div class="bg-white border-2 border-slate-200 rounded-2xl p-4 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <h3 class="font-black text-base text-slate-900 flex items-center gap-1.5">
+              <span>📝</span> 오늘의 건강/산책 한줄 메모
+            </h3>
+            <span id="memoCountBadge" class="text-xs font-bold text-slate-500">저장된 메모 2건</span>
+          </div>
+          <div class="flex gap-2">
+            <input id="quickMemoInput" type="text" placeholder="예: 해운대 바닷바람이 시원해서 기분 최고!" class="flex-1 px-3 py-2.5 rounded-xl border-2 border-slate-300 text-sm font-bold focus:outline-none focus:border-amber-500" />
+            <button id="btnSaveQuickMemo" type="button" class="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-sm shrink-0">
+              저장
+            </button>
+          </div>
+          <div id="memoListContainer" class="space-y-2 pt-1"></div>
+        </div>
+      </section>
+
+      <!-- TAB 2: 부산 갈맷길 GPS 트래킹 & 70% 스탬프북 -->
+      <section id="viewGalmaetgil" class="hidden space-y-4">
+        <div class="bg-sky-900 text-white rounded-3xl p-4 space-y-3 shadow-md">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-xs font-extrabold text-amber-300">GPS 경로 매칭 시스템</span>
+              <h2 class="text-lg font-black">부산 갈맷길 70% 완주 인증</h2>
+            </div>
+            <span id="totalStampBadge" class="px-3 py-1 rounded-full bg-amber-400 text-slate-950 font-black text-xs">도장 3 / 6 획득</span>
+          </div>
+          <p class="text-xs text-sky-100 leading-relaxed">
+            선택한 갈맷길 코스를 따라 걸으면 <strong>GPS가 100m 간격 체크포인트</strong>를 기록합니다. 전체 구간의 <strong>70% 이상</strong>을 통과하면 자동으로 완주 도장이 찍힙니다!
+          </p>
+
+          <!-- Interactive GPS Map Simulator -->
+          <div class="bg-slate-950 rounded-2xl p-3.5 border border-sky-700 space-y-3">
+            <div class="flex items-center justify-between">
+              <span id="simCourseName" class="font-black text-sm text-amber-300">📍 2-1구간: 송정~청사포~해운대~동백섬</span>
+              <span id="simCoursePct" class="font-black text-base text-emerald-400">65% 통과</span>
+            </div>
+
+            <!-- SVG GPS Trail Visualization -->
+            <div class="relative w-full h-36 bg-slate-900 rounded-xl overflow-hidden border border-slate-700 flex items-center justify-center">
+              <svg viewBox="0 0 360 120" class="w-full h-full">
+                <!-- Sea Background Accent -->
+                <path d="M0,95 Q90,82 180,95 T360,90 L360,120 L0,120 Z" fill="#0c4a6e" opacity="0.55" />
+                <!-- Full Course Gray Track -->
+                <path d="M 25 80 Q 85 25, 145 65 T 265 45 T 335 30" fill="none" stroke="#475569" stroke-width="8" stroke-linecap="round" stroke-dasharray="6 4" />
+                <!-- Active GPS Walked Track -->
+                <path id="svgWalkedPath" d="M 25 80 Q 85 25, 145 65 T 265 45 T 335 30" fill="none" stroke="#22c55e" stroke-width="8" stroke-linecap="round" stroke-dasharray="360" stroke-dashoffset="126" />
+                <!-- 70% Threshold Marker -->
+                <circle cx="255" cy="48" r="8" fill="#f59e0b" stroke="#fff" stroke-width="2" />
+                <text x="220" y="25" fill="#fcd34d" font-size="11" font-weight="bold">70% 도장 기준선</text>
+                <!-- Start & End Markers -->
+                <circle cx="25" cy="80" r="6" fill="#38bdf8" />
+                <text x="12" y="102" fill="#bae6fd" font-size="10" font-weight="bold">시점</text>
+                <circle cx="335" cy="30" r="6" fill="#f43f5e" />
+                <text x="312" y="52" fill="#fda4af" font-size="10" font-weight="bold">종점</text>
+              </svg>
+
+              <!-- Stamp Overlay when >= 70% -->
+              <div id="mapStampOverlay" class="hidden absolute right-3 bottom-2 bg-white/95 text-red-600 px-3 py-1.5 rounded-xl font-black text-xs stamp-badge">
+                💮 갈맷길 완주인증 완료
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between gap-2">
+              <button id="btnGpsAdvance" type="button" class="flex-1 py-3 px-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-sm shadow">
+                🚶 GPS 따라 +10% 더 걷기 (도장 테스트)
+              </button>
+              <button id="btnGpsReset" type="button" class="py-3 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs">
+                초기화
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Galmaet-gil Stamp Book Grid -->
+        <div class="space-y-2.5">
+          <h3 class="font-black text-base text-slate-900 px-1">나의 부산 갈맷길 완주 도장 수첩</h3>
+          <div id="courseStampGrid" class="grid grid-cols-1 gap-3"></div>
+        </div>
+      </section>
+
+      <!-- TAB 3: 부정행위 차단 공정 순위표 (Anti-Cheat Ranking) -->
+      <section id="viewRanking" class="hidden space-y-4">
+        <div class="bg-slate-900 text-white rounded-3xl p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 font-black text-xs">
+              🛡️ AI 공정 만보기 보안 작동 중
+            </span>
+            <span class="text-xs text-slate-300 font-bold">실시간 부정행위 필터</span>
+          </div>
+          <h2 class="text-lg font-black text-amber-300">자동걷기 기계 차단 · 공정 순위표</h2>
+          <p class="text-xs text-slate-200 leading-relaxed">
+            진자 운동 기계(일명 '자동걷기 흔들기')나 비현실적인 심야 조작 걸음을 자동으로 걸러내어 <strong>실제로 두 발로 걸으신 어르신만 순위에 반영</strong>합니다.
+          </p>
+
+          <!-- Interactive Anti-Cheat Simulator Box -->
+          <div class="bg-slate-800 rounded-2xl p-3.5 border border-slate-700 space-y-3">
+            <p class="text-xs font-extrabold text-amber-200">🔍 부정행위(이상 패턴) 탐지 시뮬레이터</p>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <button id="btnTestNormalWalk" type="button" class="py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow">
+                1. 정상 산책 패턴 입력
+              </button>
+              <button id="btnTestMachineWalk" type="button" class="py-2.5 px-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs shadow">
+                2. 자동걷기 기계 (1.5만보 정속)
+              </button>
+              <button id="btnTestNightWalk" type="button" class="py-2.5 px-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-black text-xs shadow">
+                3. 새벽 2시 집중 조작 패턴
+              </button>
+            </div>
+
+            <!-- Detection Result Report -->
+            <div id="antiCheatResultBox" class="bg-slate-950 rounded-xl p-3 border border-slate-700 text-xs space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-slate-400">판독 상태:</span>
+                <span id="acVerdictBadge" class="px-2 py-0.5 rounded bg-emerald-600 text-white font-black">정상 보행 인증</span>
+              </div>
+              <p id="acDetailText" class="text-slate-200 font-medium leading-relaxed">
+                보폭 주기 변화율(분산 14.2%), 신호등 대기·휴식 구간 포함, GPS 위치 이동 일치 → 공정 순위 점수에 100% 반영됩니다.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Fair Leaderboard List -->
+        <div class="space-y-2.5">
+          <div class="flex items-center justify-between px-1">
+            <h3 class="font-black text-base text-slate-900">🏆 부산 어르신 공정 걸음 순위</h3>
+            <label class="flex items-center gap-1.5 text-xs font-bold text-slate-700 cursor-pointer">
+              <input id="chkShowCheaters" type="checkbox" checked class="w-4 h-4 accent-rose-600 rounded" />
+              <span>적발된 조작 의심자 표시</span>
+            </label>
+          </div>
+          <div id="rankingListContainer" class="space-y-2.5"></div>
+        </div>
+      </section>
+
+      <!-- TAB 4: APK 설치 및 제작 방법 안내 -->
+      <section id="viewGuide" class="hidden space-y-4">
+        <div class="bg-amber-50 border-2 border-amber-400 rounded-3xl p-4 space-y-2.5 shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="px-2.5 py-0.5 rounded-full bg-emerald-700 text-white font-black text-xs">안드로이드 프로젝트 준비 완료</span>
+            <span class="text-xs font-bold text-amber-900">코딩 무경험자용</span>
+          </div>
+          <h2 class="text-lg font-black text-slate-900">📲 내 휴대폰에 설치(.apk)하는 2가지 방법</h2>
+          <p class="text-xs text-slate-700 font-medium leading-relaxed">
+            채팅창에 함께 제공된 <strong>안드로이드 프로젝트 압축파일(.zip)</strong> 안에 실제 만보기 센서·갈맷길 GPS 70% 인증·자동걷기 기계 차단 코드와 자동 빌드기가 모두 들어 있습니다.
+          </p>
+        </div>
+
+        <!-- Method A: Instant Mobile Install (PWA / WebAPK) -->
+        <div class="bg-emerald-50 border-2 border-emerald-300 rounded-2xl p-4 space-y-2">
+          <span class="px-2 py-0.5 rounded bg-emerald-700 text-white font-black text-xs">가장 쉬운 방법 (1분 완성)</span>
+          <h3 class="font-black text-base text-emerald-950">방법 1. 지금 바로 휴대폰 홈 화면에 앱으로 설치</h3>
+          <ol class="text-xs text-slate-800 font-bold space-y-1.5 list-decimal list-inside leading-relaxed">
+            <li>안드로이드 폰 크롬(Chrome)이나 삼성 인터넷으로 이 앱 파일을 엽니다.</li>
+            <li>우측 상단 <strong>메뉴(점 3개 ⋮) → [홈 화면에 추가]</strong> 또는 <strong>[앱 설치]</strong>를 누릅니다.</li>
+            <li>바탕화면에 <strong>'갈맷길 백세만보'</strong> 아이콘이 생성되어 일반 앱처럼 전체 화면으로 작동합니다!</li>
+          </ol>
+        </div>
+
+        <!-- Method B: Real Native APK via GitHub Actions (No PC program needed) -->
+        <div class="bg-white border-2 border-sky-300 rounded-2xl p-4 space-y-2.5">
+          <span class="px-2 py-0.5 rounded bg-sky-700 text-white font-black text-xs">정식 .apk 설치파일 추출 (프로그램 설치 불필요)</span>
+          <h3 class="font-black text-base text-slate-900">방법 2. 무료 자동 빌드기로 진짜 .apk 파일 받기</h3>
+          <p class="text-xs text-slate-600 leading-relaxed">
+            컴퓨터에 무거운 개발 프로그램을 깔지 않아도, 함께 드린 <strong>busan_galmaetgil_android_project.zip</strong> 파일을 무료 GitHub에 올리면 서버가 대신 <code>.apk</code> 파일을 만들어 줍니다.
+          </p>
+          <ol class="text-xs text-slate-800 font-bold space-y-1.5 list-decimal list-inside bg-slate-50 p-3 rounded-xl border border-slate-200 leading-relaxed">
+            <li>채팅창에서 <strong>busan_galmaetgil_android_project.zip</strong>을 다운받아 압축을 풉니다.</li>
+            <li>무료 사이트 <strong>github.com</strong> 로그인 후 새 저장소(New Repository)를 만듭니다.</li>
+            <li>압축 푼 파일들을 마우스로 끌어다 업로드(Upload files)하고 저장(Commit)합니다.</li>
+            <li>상단 <strong>[Actions]</strong> 탭을 누르면 3분 뒤 완성된 <strong>Galmaetgil-Pedometer-APK</strong> 설치 파일을 바로 다운로드할 수 있습니다!</li>
+          </ol>
+        </div>
+
+        <!-- Included Native Modules Summary -->
+        <div class="space-y-2.5">
+          <div class="bg-white border-2 border-slate-200 rounded-2xl p-3.5">
+            <h3 class="font-black text-sm text-emerald-800">① 시니어 맞춤 큰 글씨 & 안드로이드 TTS 음성</h3>
+            <p class="text-xs text-slate-600 mt-1 leading-relaxed">
+              <code>MainActivity.kt</code>에서 안드로이드 내장 음성합성(TextToSpeech)과 하드웨어 만보기 센서(<code>TYPE_STEP_COUNTER</code>)를 실시간 연결합니다.
+            </p>
+          </div>
+          <div class="bg-white border-2 border-slate-200 rounded-2xl p-3.5">
+            <h3 class="font-black text-sm text-sky-800">② 갈맷길 GPX 좌표 70% 스탬프 판별</h3>
+            <p class="text-xs text-slate-600 mt-1 leading-relaxed">
+              <code>GalmaetgilGpsTracker.kt</code>가 부산 갈맷길 구간별 체크포인트 반경 50m 통과 여부를 계산해 70% 이상 걸으면 자동으로 도장을 찍어줍니다.
+            </p>
+          </div>
+          <div class="bg-white border-2 border-slate-200 rounded-2xl p-3.5">
+            <h3 class="font-black text-sm text-rose-800">③ 자동걷기 기계(흔들기) 3중 차단 필터</h3>
+            <p class="text-xs text-slate-600 mt-1 leading-relaxed">
+              <code>AntiCheatDetector.kt</code>가 1) 무휴식 정속 흔들기(보폭 주기 분산 &lt; 2.5%), 2) 새벽 01~05시 비정상 폭증, 3) GPS 미이동 제자리 흔들기를 걸러내 공정 순위를 지킵니다.
+            </p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Bottom Senior-Friendly Big Tab Bar -->
+    <nav class="bg-slate-900 text-white grid grid-cols-4 border-t-2 border-slate-700">
+      <button id="tabBtnHome" type="button" class="py-3 px-1 flex flex-col items-center justify-center gap-1 bg-amber-400 text-slate-950 font-black">
+        <span class="text-xl">👟</span>
+        <span class="text-xs">오늘걸음</span>
+      </button>
+      <button id="tabBtnGalmaetgil" type="button" class="py-3 px-1 flex flex-col items-center justify-center gap-1 text-slate-300 hover:text-white font-bold">
+        <span class="text-xl">💮</span>
+        <span class="text-xs">갈맷길도장</span>
+      </button>
+      <button id="tabBtnRanking" type="button" class="py-3 px-1 flex flex-col items-center justify-center gap-1 text-slate-300 hover:text-white font-bold">
+        <span class="text-xl">🏆</span>
+        <span class="text-xs">공정순위</span>
+      </button>
+      <button id="tabBtnGuide" type="button" class="py-3 px-1 flex flex-col items-center justify-center gap-1 text-slate-300 hover:text-white font-bold">
+        <span class="text-xl">🛠️</span>
+        <span class="text-xs">제작원리</span>
+      </button>
+    </nav>
+  </div>
+
+  <script>
+    // --- App State ---
+    const state = {
+      largeFont: false,
+      ttsEnabled: true,
+      steps: 6420,
+      goalSteps: 10000,
+      activeCourseId: '2-1',
+      showCheaters: true,
+      memos: [
+        { id: 1, date: '10월 25일 오전', text: '동백섬 한 바퀴 돌고 친구들과 따뜻한 차 한 잔!' },
+        { id: 2, date: '10월 24일 오후', text: '광안리 바닷길 바람이 선선해서 걷기 참 좋았음' }
+      ],
+      courses: [
+        {
+          id: '1-2',
+          name: '1-2구간 (기장~해동용궁사~송정)',
+          distance: '15.5km',
+          difficulty: '완만함 · 해안길',
+          progress: 82,
+          stamped: true,
+          stampDate: '2026.10.18 완주'
+        },
+        {
+          id: '2-1',
+          name: '2-1구간 (송정~해운대~동백섬~민락교)',
+          distance: '12.0km',
+          difficulty: '어르신 추천 · 평지 해변길',
+          progress: 65,
+          stamped: false,
+          stampDate: ''
+        },
+        {
+          id: '2-2',
+          name: '2-2구간 (민락교~광안리~이기대~오륙도)',
+          distance: '11.4km',
+          difficulty: '보통 · 해안절경길',
+          progress: 76,
+          stamped: true,
+          stampDate: '2026.10.21 완주'
+        },
+        {
+          id: '3-1',
+          name: '3-1구간 (오륙도~신선대~UN기념공원)',
+          distance: '12.5km',
+          difficulty: '보통 · 역사탐방길',
+          progress: 40,
+          stamped: false,
+          stampDate: ''
+        },
+        {
+          id: '4-1',
+          name: '4-1구간 (영도 절영해안산책로~송도~암남공원)',
+          distance: '12.9km',
+          difficulty: '어르신 인기 · 바다산책로',
+          progress: 74,
+          stamped: true,
+          stampDate: '2026.10.12 완주'
+        },
+        {
+          id: '7-1',
+          name: '7-1구간 (성지곡수원지~금정산성~동문)',
+          distance: '13.4km',
+          difficulty: '숲길 · 피톤치드 코스',
+          progress: 20,
+          stamped: false,
+          stampDate: ''
+        }
+      ],
+      rankings: [
+        { id: 'r1', name: '김복순 어르신 (해운대구)', rawSteps: 9420, validSteps: 9420, stamps: 5, status: 'verified', reason: '보행 리듬 자연스러움 · 갈맷길 GPS 일치' },
+        { id: 'r2', name: '박영호 어르신 (수영구)', rawSteps: 8850, validSteps: 8850, stamps: 4, status: 'verified', reason: '정상 산책 패턴 (중간 휴식 3회 포함)' },
+        { id: 'me', name: '나 (부산 갈맷길 걷기왕)', rawSteps: 6420, validSteps: 6420, stamps: 3, status: 'verified', reason: '정상 걸음 인증됨 · 실시간 반영 중', isMe: true },
+        { id: 'r3', name: '이정자 어르신 (영도구)', rawSteps: 6190, validSteps: 6190, stamps: 3, status: 'verified', reason: '정상 보행 인증' },
+        { id: 'c1', name: '최OO (자동걷기 기계 적발)', rawSteps: 24800, validSteps: 0, stamps: 0, status: 'flagged_machine', reason: '⚠️ 2시간 30분 동안 휴식 없이 분당 165보 동일 속도로 24,800보 연속 기록 (자동흔들기 기계 판정 → 순위 제외)' },
+        { id: 'c2', name: '정OO (심야 이상패턴 적발)', rawSteps: 18500, validSteps: 2100, stamps: 1, status: 'flagged_night', reason: '⚠️ 새벽 01:30~04:00 사이 제자리 16,400보 감지 (비정상 시간대 조작분 제외 후 실제 걸음 2,100보만 인정)' }
+      ]
+    };
+
+    // --- Helper: Speak via Web Speech API ---
+    function speakKorean(text) {
+      if (!state.ttsEnabled) return;
+      try {
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+          const utter = new SpeechSynthesisUtterance(text);
+          utter.lang = 'ko-KR';
+          utter.rate = 0.95;
+          window.speechSynthesis.speak(utter);
+        }
+      } catch (e) {
+        // Ignore speech errors in restricted environments
+      }
+    }
+
+    function showToast(msg, isWarning) {
+      const banner = document.getElementById('toastBanner');
+      const textEl = document.getElementById('toastText');
+      banner.className = isWarning
+        ? 'bg-rose-700 text-white px-4 py-3 text-sm font-bold flex items-center justify-between transition-all'
+        : 'bg-emerald-700 text-white px-4 py-3 text-sm font-bold flex items-center justify-between transition-all';
+      textEl.textContent = msg;
+      banner.classList.remove('hidden');
+    }
+
+    // --- Render Functions ---
+    function renderHome() {
+      document.getElementById('todaySteps').textContent = state.steps.toLocaleString();
+      const pct = Math.min(100, Math.round((state.steps / state.goalSteps) * 100));
+      document.getElementById('stepProgressBar').style.width = pct + '%';
+      document.getElementById('stepGoalPercent').textContent = pct + '% 달성';
+
+      const km = (state.steps * 0.00064).toFixed(1);
+      const kcal = Math.round(state.steps * 0.034);
+      const stampCount = state.courses.filter(c => c.stamped).length;
+
+      document.getElementById('statKm').innerHTML = `${km}<span class="text-xs font-bold ml-0.5">km</span>`;
+      document.getElementById('statKcal').innerHTML = `${kcal}<span class="text-xs font-bold ml-0.5">kcal</span>`;
+      document.getElementById('statStamps').innerHTML = `${stampCount}<span class="text-xs font-bold ml-0.5">/ ${state.courses.length}개</span>`;
+
+      const activeCourse = state.courses.find(c => c.id === state.activeCourseId) || state.courses[1];
+      document.getElementById('homeActiveCourseTitle').textContent = activeCourse.name;
+      document.getElementById('homeActiveCourseProgress').textContent =
+        activeCourse.stamped
+          ? `🎉 ${activeCourse.progress}% 달성! 완주 도장이 찍혔습니다!`
+          : `GPS 경로 달성률: ${activeCourse.progress}% (70% 이상 시 도장 발급!)`;
+
+      // Render Memos
+      document.getElementById('memoCountBadge').textContent = `저장된 메모 ${state.memos.length}건`;
+      const memoContainer = document.getElementById('memoListContainer');
+      memoContainer.innerHTML = '';
+      state.memos.forEach(memo => {
+        const row = document.createElement('div');
+        row.className = 'bg-amber-50/70 border border-amber-200 rounded-xl px-3 py-2 flex items-center justify-between gap-2';
+        row.innerHTML = `
+          <div class="text-xs">
+            <span class="font-extrabold text-amber-800 mr-1.5">[${memo.date}]</span>
+            <span class="font-bold text-slate-800">${memo.text}</span>
+          </div>
+          <button type="button" data-del-memo="${memo.id}" class="text-xs font-bold text-rose-600 hover:underline shrink-0">삭제</button>
+        `;
+        memoContainer.appendChild(row);
+      });
+
+      memoContainer.querySelectorAll('[data-del-memo]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = Number(btn.getAttribute('data-del-memo'));
+          state.memos = state.memos.filter(m => m.id !== id);
+          renderHome();
+        });
+      });
+    }
+
+    function renderGalmaetgil() {
+      const stampCount = state.courses.filter(c => c.stamped).length;
+      document.getElementById('totalStampBadge').textContent = `도장 ${stampCount} / ${state.courses.length} 획득`;
+
+      const activeCourse = state.courses.find(c => c.id === state.activeCourseId) || state.courses[1];
+      document.getElementById('simCourseName').textContent = `📍 ${activeCourse.name}`;
+      document.getElementById('simCoursePct').textContent = `${activeCourse.progress}% 통과`;
+
+      // Update SVG path dashoffset (360 total length)
+      const dashOffset = Math.max(0, Math.round(360 * (1 - activeCourse.progress / 100)));
+      document.getElementById('svgWalkedPath').setAttribute('stroke-dashoffset', String(dashOffset));
+
+      const stampOverlay = document.getElementById('mapStampOverlay');
+      if (activeCourse.progress >= 70) {
+        stampOverlay.classList.remove('hidden');
+        stampOverlay.classList.add('stamp-pop');
+      } else {
+        stampOverlay.classList.add('hidden');
+        stampOverlay.classList.remove('stamp-pop');
+      }
+
+      const grid = document.getElementById('courseStampGrid');
+      grid.innerHTML = '';
+
+      state.courses.forEach(course => {
+        const isSelected = course.id === state.activeCourseId;
+        const card = document.createElement('div');
+        card.className = `rounded-2xl p-4 border-2 transition-all ${
+          isSelected ? 'bg-sky-50 border-sky-600 shadow-md' : 'bg-white border-slate-200'
+        }`;
+
+        const stampHtml = course.stamped
+          ? `<div class="stamp-badge px-3 py-1.5 rounded-xl bg-rose-50 text-red-600 font-black text-xs text-center shrink-0">
+               💮 완주도장<br/><span class="text-[10px] font-bold">${course.stampDate}</span>
+             </div>`
+          : `<div class="px-3 py-2 rounded-xl bg-slate-100 border-2 border-dashed border-slate-300 text-slate-500 font-bold text-xs text-center shrink-0">
+               70% 이상 시<br/>도장 날인
+             </div>`;
+
+        card.innerHTML = `
+          <div class="flex items-start justify-between gap-3">
+            <div class="space-y-1 flex-1">
+              <div class="flex items-center gap-1.5">
+                <span class="text-xs font-black px-2 py-0.5 rounded ${isSelected ? 'bg-sky-700 text-white' : 'bg-slate-200 text-slate-800'}">
+                  ${isSelected ? '현재 선택됨' : '갈맷길 코스'}
+                </span>
+                <span class="text-xs font-bold text-slate-500">${course.distance} · ${course.difficulty}</span>
+              </div>
+              <h4 class="font-black text-base text-slate-900">${course.name}</h4>
+              <div class="w-full bg-slate-200 h-3.5 rounded-full overflow-hidden mt-2 relative">
+                <div class="${course.progress >= 70 ? 'bg-emerald-600' : 'bg-sky-600'} h-full transition-all" style="width: ${course.progress}%"></div>
+                <div class="absolute top-0 bottom-0 left-[70%] w-0.5 bg-amber-500" title="70% 완주 기준선"></div>
+              </div>
+              <div class="flex justify-between text-xs font-bold pt-1">
+                <span class="${course.progress >= 70 ? 'text-emerald-700 font-black' : 'text-slate-600'}">현재 GPS 달성률: ${course.progress}%</span>
+                <span class="text-amber-700">완주 기준: 70%</span>
+              </div>
+            </div>
+            ${stampHtml}
+          </div>
+          <div class="mt-3 pt-2.5 border-t border-slate-200/80 flex justify-end">
+            <button type="button" data-select-course="${course.id}" class="px-3 py-1.5 rounded-xl text-xs font-black ${
+              isSelected ? 'bg-sky-700 text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-800'
+            }">
+              ${isSelected ? '👆 위 지도에서 걷기 테스트 중' : '이 코스 선택해서 걷기'}
+            </button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+
+      grid.querySelectorAll('[data-select-course]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.activeCourseId = btn.getAttribute('data-select-course');
+          renderGalmaetgil();
+          renderHome();
+        });
+      });
+    }
+
+    function renderRanking() {
+      // Sync user's valid steps & stamps
+      const meEntry = state.rankings.find(r => r.isMe);
+      if (meEntry && meEntry.status === 'verified') {
+        meEntry.rawSteps = state.steps;
+        meEntry.validSteps = state.steps;
+        meEntry.stamps = state.courses.filter(c => c.stamped).length;
+      }
+
+      const container = document.getElementById('rankingListContainer');
+      container.innerHTML = '';
+
+      // Sort verified first by validSteps descending, then flagged at the bottom
+      const sorted = [...state.rankings].sort((a, b) => {
+        const aFlag = a.status !== 'verified';
+        const bFlag = b.status !== 'verified';
+        if (aFlag !== bFlag) return aFlag ? 1 : -1;
+        return b.validSteps - a.validSteps;
+      });
+
+      let rankCounter = 1;
+      sorted.forEach(item => {
+        const isFlagged = item.status !== 'verified';
+        if (isFlagged && !state.showCheaters) return;
+
+        const card = document.createElement('div');
+        if (isFlagged) {
+          card.className = 'rounded-2xl p-3.5 border-2 border-rose-300 bg-rose-50/80 space-y-1.5';
+          card.innerHTML = `
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded bg-rose-600 text-white font-black text-xs">순위 제외</span>
+                <span class="font-black text-sm text-rose-950 line-through">${item.name}</span>
+              </div>
+              <div class="text-right">
+                <span class="text-xs text-rose-700 font-bold line-through">측정 ${item.rawSteps.toLocaleString()}보</span>
+                <span class="block text-xs font-black text-rose-900">인정 걸음: ${item.validSteps.toLocaleString()}보</span>
+              </div>
+            </div>
+            <p class="text-xs font-bold text-rose-800 bg-rose-100 rounded-lg px-2.5 py-1.5">${item.reason}</p>
+          `;
+        } else {
+          const rankNum = rankCounter++;
+          const medal = rankNum === 1 ? '🥇 1위' : rankNum === 2 ? '🥈 2위' : rankNum === 3 ? '🥉 3위' : `${rankNum}위`;
+          card.className = `rounded-2xl p-3.5 border-2 ${
+            item.isMe ? 'border-amber-400 bg-amber-50 shadow-sm' : 'border-slate-200 bg-white'
+          } space-y-1`;
+          card.innerHTML = `
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="px-2.5 py-1 rounded-xl ${
+                  rankNum <= 3 ? 'bg-amber-400 text-slate-950' : 'bg-slate-200 text-slate-800'
+                } font-black text-xs">${medal}</span>
+                <div>
+                  <span class="font-black text-sm text-slate-900">${item.name}</span>
+                  <span class="block text-[11px] font-bold text-emerald-700">💮 갈맷길 도장 ${item.stamps}개</span>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="font-black text-lg text-slate-900">${item.validSteps.toLocaleString()}보</span>
+                <span class="block text-[10px] font-extrabold text-emerald-700">✔ 공정인증 완료</span>
+              </div>
+            </div>
+            <p class="text-[11px] text-slate-600 font-medium pt-0.5">${item.reason}</p>
+          `;
+        }
+        container.appendChild(card);
+      });
+    }
+
+    // --- Tab Switching ---
+    function switchTab(tabName) {
+      const views = {
+        home: document.getElementById('viewHome'),
+        galmaetgil: document.getElementById('viewGalmaetgil'),
+        ranking: document.getElementById('viewRanking'),
+        guide: document.getElementById('viewGuide')
+      };
+      const buttons = {
+        home: document.getElementById('tabBtnHome'),
+        galmaetgil: document.getElementById('tabBtnGalmaetgil'),
+        ranking: document.getElementById('tabBtnRanking'),
+        guide: document.getElementById('tabBtnGuide')
+      };
+
+      Object.keys(views).forEach(k => {
+        if (k === tabName) {
+          views[k].classList.remove('hidden');
+          buttons[k].className = 'py-3 px-1 flex flex-col items-center justify-center gap-1 bg-amber-400 text-slate-950 font-black';
+        } else {
+          views[k].classList.add('hidden');
+          buttons[k].className = 'py-3 px-1 flex flex-col items-center justify-center gap-1 text-slate-300 hover:text-white font-bold';
+        }
+      });
+
+      if (tabName === 'home') renderHome();
+      if (tabName === 'galmaetgil') renderGalmaetgil();
+      if (tabName === 'ranking') renderRanking();
+    }
+
+    // --- Event Listeners ---
+    document.getElementById('tabBtnHome').addEventListener('click', () => switchTab('home'));
+    document.getElementById('tabBtnGalmaetgil').addEventListener('click', () => switchTab('galmaetgil'));
+    document.getElementById('tabBtnRanking').addEventListener('click', () => switchTab('ranking'));
+    document.getElementById('tabBtnGuide').addEventListener('click', () => switchTab('guide'));
+    document.getElementById('btnGoGalmaetgil').addEventListener('click', () => switchTab('galmaetgil'));
+
+    document.getElementById('btnCloseToast').addEventListener('click', () => {
+      document.getElementById('toastBanner').classList.add('hidden');
+    });
+
+    // Font Size Toggle for Seniors
+    document.getElementById('btnFontToggle').addEventListener('click', () => {
+      state.largeFont = !state.largeFont;
+      const root = document.getElementById('appRoot');
+      const btn = document.getElementById('btnFontToggle');
+      if (state.largeFont) {
+        root.classList.add('senior-large');
+        btn.textContent = '기본 글씨';
+        showToast('어르신 큰 글씨 모드가 켜졌습니다.', false);
+      } else {
+        root.classList.remove('senior-large');
+        btn.textContent = '글씨 크게+';
+        showToast('기본 글씨 크기로 변경되었습니다.', false);
+      }
+    });
+
+    // TTS Toggle
+    document.getElementById('btnTtsToggle').addEventListener('click', () => {
+      state.ttsEnabled = !state.ttsEnabled;
+      document.getElementById('ttsIcon').textContent = state.ttsEnabled ? '🔊' : '🔇';
+      document.getElementById('ttsLabel').textContent = state.ttsEnabled ? '음성켜짐' : '음성꺼짐';
+      if (state.ttsEnabled) {
+        speakKorean('음성 안내가 켜졌습니다.');
+      }
+    });
+
+    // +500 Steps Walk Simulation
+    document.getElementById('btnWalkSim').addEventListener('click', () => {
+      state.steps += 500;
+      const activeCourse = state.courses.find(c => c.id === state.activeCourseId);
+      let justStamped = false;
+      if (activeCourse && activeCourse.progress < 100) {
+        const prev = activeCourse.progress;
+        activeCourse.progress = Math.min(100, activeCourse.progress + 5);
+        if (prev < 70 && activeCourse.progress >= 70 && !activeCourse.stamped) {
+          activeCourse.stamped = true;
+          activeCourse.stampDate = '오늘 완주!';
+          justStamped = true;
+        }
+      }
+      renderHome();
+      renderRanking();
+      if (justStamped) {
+        const msg = `축하합니다! ${activeCourse.name} 70% 이상 걸으셔서 갈맷길 완주 도장이 찍혔습니다!`;
+        showToast(msg, false);
+        speakKorean(msg);
+      } else {
+        showToast(`500보 추가! 현재 총 ${state.steps.toLocaleString()}보입니다.`, false);
+      }
+    });
+
+    // Voice Read Summary
+    document.getElementById('btnVoiceRead').addEventListener('click', () => {
+      const stampCount = state.courses.filter(c => c.stamped).length;
+      const msg = `오늘 총 ${state.steps}보를 걸으셨습니다. 획득한 부산 갈맷길 완주 도장은 총 ${stampCount}개이며, 공정 순위 3위입니다. 오늘도 건강하게 걸어주셔서 감사합니다!`;
+      showToast(msg, false);
+      speakKorean(msg);
+    });
+
+    // Save Quick Memo
+    document.getElementById('btnSaveQuickMemo').addEventListener('click', () => {
+      const input = document.getElementById('quickMemoInput');
+      const val = input.value.trim();
+      if (!val) {
+        showToast('메모 내용을 먼저 입력해 주세요.', true);
+        return;
+      }
+      state.memos.unshift({
+        id: Date.now(),
+        date: '방금 전',
+        text: val
+      });
+      input.value = '';
+      renderHome();
+      showToast('오늘의 산책 메모가 저장되었습니다.', false);
+    });
+
+    // Galmaet-gil GPS +10% Simulator
+    document.getElementById('btnGpsAdvance').addEventListener('click', () => {
+      const course = state.courses.find(c => c.id === state.activeCourseId);
+      if (!course) return;
+      const prev = course.progress;
+      course.progress = Math.min(100, course.progress + 10);
+      state.steps += 800;
+
+      if (prev < 70 && course.progress >= 70) {
+        course.stamped = true;
+        course.stampDate = '방금 완주 인증!';
+        const msg = `💮 축하합니다! ${course.name} 코스를 ${course.progress}% 걸으셔서 70% 기준을 통과해 갈맷길 완주 도장이 찍혔습니다!`;
+        showToast(msg, false);
+        speakKorean(msg);
+      } else {
+        showToast(`GPS 경로 ${course.progress}% 통과 중입니다.`, false);
+      }
+      renderGalmaetgil();
+      renderHome();
+    });
+
+    document.getElementById('btnGpsReset').addEventListener('click', () => {
+      const course = state.courses.find(c => c.id === state.activeCourseId);
+      if (!course) return;
+      course.progress = 55;
+      course.stamped = false;
+      course.stampDate = '';
+      renderGalmaetgil();
+      renderHome();
+      showToast('선택한 코스의 진행률을 55%로 초기화했습니다. 다시 70% 도장 획득을 테스트해 보세요!', false);
+    });
+
+    // Anti-Cheat Simulator Buttons
+    document.getElementById('btnTestNormalWalk').addEventListener('click', () => {
+      const badge = document.getElementById('acVerdictBadge');
+      const detail = document.getElementById('acDetailText');
+      badge.className = 'px-2 py-0.5 rounded bg-emerald-600 text-white font-black';
+      badge.textContent = '✔ 정상 어르신 보행 인증 (순위 반영)';
+      detail.textContent = '걸음 속도 변화율(표준편차 14.8%), 중간 벤치 휴식 2회, 갈맷길 GPS 이동 경로 일치 → 100% 실제 걸음으로 인정되어 공정 순위에 반영되었습니다.';
+
+      const me = state.rankings.find(r => r.isMe);
+      if (me) {
+        me.status = 'verified';
+        me.validSteps = state.steps;
+        me.reason = '정상 걸음 인증됨 · 실시간 반영 중';
+      }
+      renderRanking();
+      showToast('정상 보행 패턴으로 판정되어 순위에 정상 반영됩니다.', false);
+    });
+
+    document.getElementById('btnTestMachineWalk').addEventListener('click', () => {
+      const badge = document.getElementById('acVerdictBadge');
+      const detail = document.getElementById('acDetailText');
+      badge.className = 'px-2 py-0.5 rounded bg-rose-600 text-white font-black';
+      badge.textContent = '🚨 자동걷기 기계(흔들기) 감지 — 순위 제외!';
+      detail.textContent = '탐지 사유: 15,000보를 단 1초의 휴식도 없이 정확히 분당 162보(속도 변화율 0.3%)로 일정하게 움직임 + GPS 위치 이동 0m → 자동걷기 장비로 판정되어 순위 점수에서 전량 제외되었습니다!';
+
+      const me = state.rankings.find(r => r.isMe);
+      if (me) {
+        me.status = 'flagged_machine';
+        me.rawSteps = state.steps + 15000;
+        me.validSteps = 0;
+        me.reason = '⚠️ [테스트 적발] 동일 속도로 무휴식 15,000보 연속 감지 (자동걷기 기계 차단됨)';
+      }
+      renderRanking();
+      showToast('자동걷기 기계의 일정한 진자 패턴이 감지되어 공정 순위에서 즉시 차단되었습니다!', true);
+      speakKorean('자동걷기 기계 패턴이 감지되어 순위에서 제외되었습니다.');
+    });
+
+    document.getElementById('btnTestNightWalk').addEventListener('click', () => {
+      const badge = document.getElementById('acVerdictBadge');
+      const detail = document.getElementById('acDetailText');
+      badge.className = 'px-2 py-0.5 rounded bg-purple-600 text-white font-black';
+      badge.textContent = '⚠️ 심야 비현실 시간대 집중 걸음 제외';
+      detail.textContent = '탐지 사유: 새벽 02:00~04:10 사이 실내 제자리에서 12,000보 집중 발생 → 심야 조작 의심 걸음 12,000보는 차단하고 낮 시간 정상 산책 걸음만 인정합니다.';
+
+      const me = state.rankings.find(r => r.isMe);
+      if (me) {
+        me.status = 'flagged_night';
+        me.rawSteps = state.steps + 12000;
+        me.validSteps = state.steps;
+        me.reason = `⚠️ [테스트 적발] 심야(02~04시) 비정상 12,000보 차감 후 정상 걸음(${state.steps.toLocaleString()}보)만 인정`;
+      }
+      renderRanking();
+      showToast('새벽 시간대 비현실적 집중 걸음이 필터링되었습니다!', true);
+    });
+
+    document.getElementById('chkShowCheaters').addEventListener('change', (e) => {
+      state.showCheaters = e.target.checked;
+      renderRanking();
+    });
+
+    // Native Android Sensor & GPS Hook (Called automatically when packaged as APK)
+    window.onNativeStepUpdate = function(realSteps, courseId, courseProgressPct, isStampedNow, antiCheatStatus, antiCheatReason) {
+      state.steps = realSteps;
+      const c = state.courses.find(item => item.id === courseId);
+      if (c) {
+        c.progress = courseProgressPct;
+        if (isStampedNow && !c.stamped) {
+          c.stamped = true;
+          c.stampDate = 'GPS 70% 완주인증!';
+          showToast(`💮 축하합니다! ${c.name} 70% 이상 완주하여 도장이 찍혔습니다!`, false);
+        }
+      }
+      const me = state.rankings.find(r => r.isMe);
+      if (me) {
+        me.rawSteps = realSteps;
+        me.status = antiCheatStatus;
+        me.validSteps = antiCheatStatus === 'verified' ? realSteps : 0;
+        me.reason = antiCheatReason;
+      }
+      renderHome();
+      renderGalmaetgil();
+      renderRanking();
+    };
+
+    // Initial Render
+    renderHome();
+    renderGalmaetgil();
+    renderRanking();
+  </script>
+</body>
+</html>
