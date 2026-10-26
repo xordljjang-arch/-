@@ -11,6 +11,7 @@ import com.naver.maps.geometry.LatLng
 import com.naver.maps.map.CameraUpdate
 import com.naver.maps.map.MapFragment
 import com.naver.maps.map.NaverMap
+import com.naver.maps.map.NaverMapSdk
 import com.naver.maps.map.OnMapReadyCallback
 import com.naver.maps.map.overlay.Marker
 import com.naver.maps.map.overlay.PolylineOverlay
@@ -25,11 +26,10 @@ class CourseMapActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // 파일 상단 import 목록에 없는 경우 추가
-import com.naver.maps.map.NaverMapSdk
-
-// onCreate 내부 (super.onCreate 바로 아래에 추가)
-NaverMapSdk.getInstance(this).client = NaverMapSdk.NcpKeyClient("nc59cc4zg0")
+        
+        // 네이버 지도 SDK 3.24.0 신규 인증 규격 강제 주입
+        NaverMapSdk.getInstance(this).client = NaverMapSdk.NcpKeyClient("nc59cc4zg0")
+        
         setContentView(R.layout.activity_course_map)
 
         locationSource = FusedLocationSource(this, 1000)
