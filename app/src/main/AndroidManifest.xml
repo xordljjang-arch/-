@@ -15,17 +15,18 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
         
-        <activity
-            android:name=".MainActivity"
-            android:exported="true">
+        <meta-data
+            android:name="com.naver.maps.map.CLIENT_ID"
+            android:value="YvT6FDsownVoXJ5Nz2kDwZjwkwzIebhvjAXtC12p" />
+
+        <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <!-- 새로 추가된 도장 화면 등록 -->
         <activity android:name=".StampActivity" />
-        
+        <activity android:name=".CourseMapActivity" />
     </application>
 </manifest>
