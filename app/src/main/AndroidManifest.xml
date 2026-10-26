@@ -17,7 +17,12 @@
         
         <!-- 올바른 Client ID 적용 완료 -->
         <meta-data
+           <!-- 구버전 및 신버전 SDK 모두 완벽 호환 -->
+        <meta-data
             android:name="com.naver.maps.map.CLIENT_ID"
+            android:value="nc59cc4zg0" />
+        <meta-data
+            android:name="com.naver.maps.map.NCP_KEY_ID"
             android:value="nc59cc4zg0" />
 
         <activity android:name=".MainActivity" android:exported="true">
