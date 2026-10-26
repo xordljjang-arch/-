@@ -9,6 +9,7 @@ import android.view.Gravity
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -22,7 +23,35 @@ class MainActivity : AppCompatActivity() {
     private var stepGoal = 10000
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // ★ 1. 블랙박스 설치: 앱이 튕기면 에러를 저장하고 즉시 종료
+        Thread.setDefaultUncaughtExceptionHandler { _, e ->
+            val errorText = "앱 강제종료 원인:\n\n${e.stackTraceToString()}"
+            getSharedPreferences("BlackBox", Context.MODE_PRIVATE)
+                .edit().putString("crash_log", errorText).commit()
+            android.os.Process.killProcess(android.os.Process.myPid())
+            System.exit(1)
+        }
+        
         super.onCreate(savedInstanceState)
+
+        // ★ 2. 블랙박스 확인: 이전에 튕겨서 저장된 에러가 있다면 화면에 출력
+        val crashPrefs = getSharedPreferences("BlackBox", Context.MODE_PRIVATE)
+        val crashLog = crashPrefs.getString("crash_log", null)
+        if (crashLog != null) {
+            crashPrefs.edit().remove("crash_log").apply() // 확인 후 삭제
+            
+            val errorView = TextView(this).apply {
+                text = crashLog
+                setTextColor(Color.RED)
+                setPadding(32, 32, 32, 32)
+                textSize = 12f
+            }
+            val scrollView = ScrollView(this).apply { addView(errorView) }
+            setContentView(scrollView)
+            return // 에러 화면을 띄우고 앱 실행은 여기서 멈춤
+        }
+
+        // 정상 실행 로직
         setContentView(R.layout.activity_main)
 
         prefs = getSharedPreferences("PedometerPrefs", Context.MODE_PRIVATE)
@@ -54,7 +83,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupUI() {
-        // ★ 안전한 커스텀 탭 버튼 이벤트 연결
         findViewById<LinearLayout>(R.id.nav_stamp_btn)?.setOnClickListener {
             startActivity(Intent(this, StampActivity::class.java))
         }
