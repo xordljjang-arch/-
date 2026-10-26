@@ -10,7 +10,8 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven { url = uri("https://naver.jfrog.io/artifactory/maven/") }
+        // ▼ 폐쇄된 주소 대신 새로운 네이버 공식 저장소 주소로 변경 ▼
+        maven { url = uri("https://repository.map.naver.com/archive/maven") }
     }
 }
 rootProject.name = "GalmaetgilPedometer"
