@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout 
+<LinearLayout 
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     android:background="#F8F9FA">
 
+    <!-- 상단 스크롤 영역 (하단 탭을 밑으로 밀어냄) -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/bottom_navigation_custom">
+        android:layout_weight="1">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -18,102 +18,123 @@
             android:orientation="vertical"
             android:padding="16dp">
 
+            <!-- 상태 배지 -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:background="#E8F5E9"
-                android:paddingHorizontal="16dp"
-                android:paddingVertical="8dp"
+                android:padding="8dp"
                 android:text="🟢 실시간 걸음 측정 중"
                 android:textColor="#2E7D32"
                 android:textStyle="bold" />
 
-            <!-- 오늘의 걸음 카드 -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp">
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:padding="24dp">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="오늘의 걸음" android:textSize="18sp" android:textStyle="bold" />
-                    <TextView android:id="@+id/tvStepCountMain" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:text="0 / 10,000 보" android:textSize="28sp" android:textStyle="bold" />
-                    <TextView android:id="@+id/tvStepPercent" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0% 달성" android:textColor="#666666" />
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
-
-            <!-- 3개 요약 카드 -->
+            <!-- 오늘의 걸음 (안전한 순정 레이아웃) -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:orientation="horizontal"
-                android:weightSum="3">
-                <androidx.cardview.widget.CardView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginEnd="4dp" android:layout_weight="1" app:cardCornerRadius="12dp">
-                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:orientation="vertical" android:padding="12dp">
-                        <TextView android:text="👟 이동 거리" android:textSize="12sp" />
-                        <TextView android:id="@+id/tvDistance" android:text="0.0 km" android:textStyle="bold" android:layout_marginTop="4dp"/>
-                    </LinearLayout>
-                </androidx.cardview.widget.CardView>
-                <androidx.cardview.widget.CardView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginHorizontal="4dp" android:layout_weight="1" app:cardCornerRadius="12dp">
-                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:orientation="vertical" android:padding="12dp">
-                        <TextView android:text="🔥 소모 열량" android:textSize="12sp" />
-                        <TextView android:id="@+id/tvCalories" android:text="0 kcal" android:textStyle="bold" android:layout_marginTop="4dp"/>
-                    </LinearLayout>
-                </androidx.cardview.widget.CardView>
-                <androidx.cardview.widget.CardView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:layout_weight="1" app:cardCornerRadius="12dp">
-                    <LinearLayout android:id="@+id/btnSetGoal" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:orientation="vertical" android:padding="12dp">
-                        <TextView android:text="⚙️ 목표 설정" android:textSize="12sp" />
-                        <TextView android:id="@+id/tvGoalSteps" android:text="10000보" android:textStyle="bold" android:layout_marginTop="4dp"/>
-                    </LinearLayout>
-                </androidx.cardview.widget.CardView>
+                android:background="#FFFFFF"
+                android:elevation="2dp"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="24dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="오늘의 걸음" android:textSize="18sp" android:textStyle="bold" />
+                <TextView android:id="@+id/tvStepCountMain" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:text="0 / 10,000 보" android:textSize="28sp" android:textStyle="bold" />
+                <TextView android:id="@+id/tvStepPercent" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0% 달성" android:textColor="#666666" />
             </LinearLayout>
 
-            <!-- 이번 주 걸음 현황 -->
-            <androidx.cardview.widget.CardView
+            <!-- 3개 요약 정보 -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                app:cardCornerRadius="16dp">
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="이번 주 걸음 현황" android:textStyle="bold" />
-                    <LinearLayout android:id="@+id/layoutWeeklyChart" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:orientation="horizontal" android:weightSum="7" />
+                android:orientation="horizontal">
+                
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="4dp"
+                    android:layout_weight="1"
+                    android:background="#FFFFFF"
+                    android:elevation="2dp"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:padding="12dp">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="👟 이동 거리" android:textSize="12sp" />
+                    <TextView android:id="@+id/tvDistance" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0.0 km" android:textStyle="bold" android:layout_marginTop="4dp"/>
                 </LinearLayout>
-            </androidx.cardview.widget.CardView>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="4dp"
+                    android:layout_weight="1"
+                    android:background="#FFFFFF"
+                    android:elevation="2dp"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:padding="12dp">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="🔥 소모 열량" android:textSize="12sp" />
+                    <TextView android:id="@+id/tvCalories" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0 kcal" android:textStyle="bold" android:layout_marginTop="4dp"/>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/btnSetGoal"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:layout_weight="1"
+                    android:background="#FFFFFF"
+                    android:elevation="2dp"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:padding="12dp">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="⚙️ 목표 설정" android:textSize="12sp" />
+                    <TextView android:id="@+id/tvGoalSteps" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="10000보" android:textStyle="bold" android:layout_marginTop="4dp"/>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- 이번 주 걸음 현황 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="#FFFFFF"
+                android:elevation="2dp"
+                android:orientation="vertical"
+                android:padding="16dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="이번 주 걸음 현황" android:textStyle="bold" />
+                <LinearLayout android:id="@+id/layoutWeeklyChart" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:orientation="horizontal" android:weightSum="7" />
+            </LinearLayout>
 
             <!-- 오늘의 건강 한줄 메모 -->
-            <androidx.cardview.widget.CardView
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:layout_marginBottom="16dp"
-                app:cardCornerRadius="16dp">
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="오늘의 건강 한줄 메모" android:textStyle="bold" />
-                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:orientation="horizontal">
-                        <EditText android:id="@+id/etMemo" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:background="#EEEEEE" android:hint="여기에 메모를 입력하세요" android:padding="12dp" android:textSize="14sp" />
-                        <Button android:id="@+id/btnSaveMemo" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:backgroundTint="#FF9800" android:text="저장" />
-                    </LinearLayout>
+                android:background="#FFFFFF"
+                android:elevation="2dp"
+                android:orientation="vertical"
+                android:padding="16dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="오늘의 건강 한줄 메모" android:textStyle="bold" />
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:orientation="horizontal">
+                    <EditText android:id="@+id/etMemo" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:background="#EEEEEE" android:hint="여기에 메모를 입력하세요" android:padding="12dp" android:textSize="14sp" />
+                    <Button android:id="@+id/btnSaveMemo" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:backgroundTint="#FF9800" android:text="저장" />
                 </LinearLayout>
-            </androidx.cardview.widget.CardView>
+            </LinearLayout>
         </LinearLayout>
     </ScrollView>
 
-    <!-- ★ 100% 튕기지 않는 커스텀 하단 탭 -->
+    <!-- 하단 탭 -->
     <LinearLayout
         android:id="@+id/bottom_navigation_custom"
         android:layout_width="match_parent"
         android:layout_height="60dp"
         android:orientation="horizontal"
         android:background="#FFFFFF"
-        android:elevation="8dp"
-        app:layout_constraintBottom_toBottomOf="parent">
+        android:elevation="8dp">
 
         <LinearLayout
             android:id="@+id/nav_today_btn"
@@ -122,8 +143,8 @@
             android:layout_weight="1"
             android:gravity="center"
             android:orientation="vertical">
-            <TextView android:text="👟" android:textSize="20sp"/>
-            <TextView android:text="오늘걸음" android:textSize="12sp" android:textColor="#2E7D32" android:textStyle="bold"/>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="👟" android:textSize="20sp"/>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="오늘걸음" android:textSize="12sp" android:textColor="#2E7D32" android:textStyle="bold"/>
         </LinearLayout>
 
         <LinearLayout
@@ -133,8 +154,8 @@
             android:layout_weight="1"
             android:gravity="center"
             android:orientation="vertical">
-            <TextView android:text="🔖" android:textSize="20sp"/>
-            <TextView android:text="갈맷길도장" android:textSize="12sp" android:textColor="#666666"/>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="🔖" android:textSize="20sp"/>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="갈맷길도장" android:textSize="12sp" android:textColor="#666666"/>
         </LinearLayout>
     </LinearLayout>
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>
