@@ -102,7 +102,7 @@
         android:id="@+id/btnOpenGalmaetgil"
         android:layout_width="match_parent"
         android:layout_height="60dp"
-        android:text="🌊 갈맷길 코스 도장판 열기"
+        android:text="🌊 갈맷길 코스 도장판 열기ver1"
         android:textSize="18sp"
         android:textStyle="bold"
         android:backgroundTint="#0288D1"
