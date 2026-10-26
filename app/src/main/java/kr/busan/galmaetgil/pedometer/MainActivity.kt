@@ -1,138 +1,131 @@
 package kr.busan.galmaetgil.pedometer
 
-import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
+import android.content.SharedPreferences
 import android.os.Bundle
-import android.view.Gravity
-import android.view.View
-import android.widget.*
+import android.widget.Button
+import android.widget.EditText
+import android.widget.LinearLayout
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.bottomnavigation.BottomNavigationView
+import java.text.SimpleDateFormat
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
-    private var dailyGoal = 10000
-    private lateinit var tvDailyGoal: TextView
+    private lateinit var prefs: SharedPreferences
+    private var currentSteps = 0
+    private var stepGoal = 10000
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        tvDailyGoal = findViewById(R.id.tvDailyGoal)
-        val prefs = getSharedPreferences("PedometerPrefs", Context.MODE_PRIVATE)
-        dailyGoal = prefs.getInt("DAILY_GOAL", 10000)
-        updateGoalText()
+        prefs = getSharedPreferences("PedometerPrefs", Context.MODE_PRIVATE)
+        stepGoal = prefs.getInt("STEP_GOAL", 10000)
 
-        findViewById<ImageButton>(R.id.btnSetGoal).setOnClickListener {
-            showGoalSettingDialog()
-        }
-
-        // 갈맷길 지도 화면으로 넘어가는 핵심 버튼
-        findViewById<Button>(R.id.btnOpenGalmaetgil).setOnClickListener {
-            startActivity(Intent(this, StampActivity::class.java))
-        }
-
-        drawWeeklyChart()
+        checkMidnightReset()
+        setupUI()
+        updateWeeklyChart()
     }
 
-    private fun updateGoalText() {
-        tvDailyGoal.text = "일일 목표: %,d보".format(dailyGoal)
+    override fun onResume() {
+        super.onResume()
+        // 센서 등에서 걸음수를 올려주는 로직이 있다면 여기서 currentSteps를 갱신합니다.
+        // 현재는 저장된 값을 불러옵니다.
+        currentSteps = prefs.getInt("TODAY_STEPS", 0)
+        updateStepUI()
     }
 
-    private fun showGoalSettingDialog() {
-        val input = EditText(this).apply {
-            inputType = android.text.InputType.TYPE_CLASS_NUMBER
-            setText(dailyGoal.toString())
-        }
+    private fun checkMidnightReset() {
+        val todayStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        val lastDate = prefs.getString("LAST_DATE", "")
 
-        AlertDialog.Builder(this)
-            .setTitle("목표 걸음 수 설정")
-            .setView(input)
-            .setPositiveButton("저장") { _, _ ->
-                val newGoal = input.text.toString().toIntOrNull()
-                if (newGoal != null && newGoal > 0) {
-                    dailyGoal = newGoal
-                    getSharedPreferences("PedometerPrefs", Context.MODE_PRIVATE)
-                        .edit().putInt("DAILY_GOAL", dailyGoal).apply()
-                    updateGoalText()
-                    drawWeeklyChart()
+        if (lastDate != todayStr) {
+            // 날짜가 변경됨 (자정 지남) -> 어제 걸음수 히스토리에 저장 후 오늘 0으로 초기화
+            if (lastDate!!.isNotEmpty()) {
+                val yesterdaySteps = prefs.getInt("TODAY_STEPS", 0)
+                prefs.edit().putInt("HISTORY_$lastDate", yesterdaySteps).apply()
+            }
+            prefs.edit().putInt("TODAY_STEPS", 0).putString("LAST_DATE", todayStr).apply()
+            currentSteps = 0
+        }
+    }
+
+    private fun setupUI() {
+        val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_navigation)
+        bottomNav.selectedItemId = R.id.nav_today
+        bottomNav.setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.nav_today -> true
+                R.id.nav_stamp -> {
+                    startActivity(Intent(this, StampActivity::class.java))
+                    false // 탭 선택 상태는 메인에 머물도록 유지
                 }
+                else -> false
             }
-            .setNegativeButton("취소", null)
-            .show()
+        }
+
+        findViewById<LinearLayout>(R.id.btnSetGoal).setOnClickListener {
+            // 임시로 누를때마다 1000보씩 증가하는 로직 (실제로는 다이얼로그로 구현 권장)
+            stepGoal += 1000
+            if (stepGoal > 30000) stepGoal = 5000
+            prefs.edit().putInt("STEP_GOAL", stepGoal).apply()
+            updateStepUI()
+            Toast.makeText(this, "목표가 ${stepGoal}보로 변경되었습니다.", Toast.LENGTH_SHORT).show()
+        }
+
+        // 메모 기능 복구 및 당일 기준 저장
+        val etMemo = findViewById<EditText>(R.id.etMemo)
+        val todayStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        etMemo.setText(prefs.getString("MEMO_$todayStr", ""))
+
+        findViewById<Button>(R.id.btnSaveMemo).setOnClickListener {
+            prefs.edit().putString("MEMO_$todayStr", etMemo.text.toString()).apply()
+            Toast.makeText(this, "메모가 저장되었습니다.", Toast.LENGTH_SHORT).show()
+        }
     }
 
-    private fun drawWeeklyChart() {
-        val chartContainer = findViewById<LinearLayout>(R.id.chartContainer)
-        val goalLine = findViewById<View>(R.id.goalLine)
-        chartContainer.removeAllViews()
+    private fun updateStepUI() {
+        val tvStepCount = findViewById<TextView>(R.id.tvStepCountMain)
+        val tvStepPercent = findViewById<TextView>(R.id.tvStepPercent)
+        val tvDistance = findViewById<TextView>(R.id.tvDistance)
+        val tvCalories = findViewById<TextView>(R.id.tvCalories)
+        val tvGoalSteps = findViewById<TextView>(R.id.tvGoalSteps)
 
-        // 아직 걷지 않았으므로 전부 0으로 초기화 (테스트 시 0으로 정상 표시됨)
-        val days = listOf("월", "화", "수", "목", "금", "토", "일")
-        val weeklySteps = listOf(0, 0, 0, 0, 0, 0, 0) 
+        val percent = if (stepGoal > 0) (currentSteps * 100 / stepGoal) else 0
+        val distanceKm = currentSteps * 0.0007 // 보폭 임의 계산
+        val calories = currentSteps * 0.04 // 칼로리 임의 계산
+
+        tvStepCount.text = "$currentSteps / $stepGoal 보"
+        tvStepPercent.text = "${percent}% 달성"
+        tvDistance.text = String.format("%.2f km", distanceKm)
+        tvCalories.text = "${calories.toInt()} kcal"
+        tvGoalSteps.text = "${stepGoal}보"
+    }
+
+    private fun updateWeeklyChart() {
+        val tvWeeklyChart = findViewById<TextView>(R.id.tvWeeklyChart)
+        val cal = Calendar.getInstance()
+        val format = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val dayFormat = SimpleDateFormat("E", Locale.KOREAN)
+
+        var chartText = ""
+        // 오늘을 기준으로 과거 6일부터 오늘까지 총 7일 연속 표기 (자동 밀리기)
+        cal.add(Calendar.DAY_OF_YEAR, -6)
         
-        val maxSteps = weeklySteps.maxOrNull()?.coerceAtLeast(dailyGoal) ?: dailyGoal
-        val dp = resources.displayMetrics.density
-        
-        // 💡 버그 수정: 목표선이 차트 최대 높이(0.7)에 정확히 일치하도록 수식 변경
-        val lineMarginTop = (204 * (1f - (0.7f * (dailyGoal.toFloat() / maxSteps.toFloat())))).toInt()
-        val params = goalLine.layoutParams as FrameLayout.LayoutParams
-        params.topMargin = (lineMarginTop * dp).toInt()
-        goalLine.layoutParams = params
-
-        for (i in days.indices) {
-            val steps = weeklySteps[i]
-            val isGoalReached = steps >= dailyGoal && steps > 0
-
-            val dayLayout = LinearLayout(this).apply {
-                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f)
-                orientation = LinearLayout.VERTICAL
-                gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
-            }
-
-            // 달성 왕관
-            val tvCrown = TextView(this).apply {
-                text = "👑"
-                textSize = 14f
-                gravity = Gravity.CENTER
-                alpha = if (isGoalReached) 1f else 0f
-            }
-
-            // 막대 위 걸음 수 표기
-            val tvSteps = TextView(this).apply {
-                text = steps.toString()
-                textSize = 10f
-                gravity = Gravity.CENTER
-                setTextColor(Color.DKGRAY)
-            }
-
-            // 💡 버그 수정: 막대 두께를 기기 해상도에 맞춰 일정하게(20dp) 설정
-            val barHeightWeight = (steps.toFloat() / maxSteps.toFloat()) * 0.7f
-            val spacer = View(this).apply {
-                layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f - barHeightWeight)
-            }
-            val barWidth = (20 * dp).toInt()
-            val bar = View(this).apply {
-                layoutParams = LinearLayout.LayoutParams(barWidth, 0, barHeightWeight)
-                setBackgroundColor(if (isGoalReached) Color.parseColor("#4CAF50") else Color.parseColor("#90CAF9"))
-            }
-
-            // 하단 요일 표기
-            val tvDay = TextView(this).apply {
-                text = days[i]
-                textSize = 14f
-                gravity = Gravity.CENTER
-                setPadding(0, 8, 0, 0)
-            }
-
-            dayLayout.addView(spacer)
-            dayLayout.addView(tvCrown)
-            dayLayout.addView(tvSteps)
-            dayLayout.addView(bar)
-            dayLayout.addView(tvDay)
-
-            chartContainer.addView(dayLayout)
+        for (i in 0..6) {
+            val dateStr = format.format(cal.time)
+            val dayStr = dayFormat.format(cal.time)
+            val steps = if (i == 6) currentSteps else prefs.getInt("HISTORY_$dateStr", 0)
+            
+            chartText += "$dayStr: ${steps}보" + if (i < 6) "\n" else ""
+            cal.add(Calendar.DAY_OF_YEAR, 1)
         }
+        
+        tvWeeklyChart.text = chartText
     }
 }
