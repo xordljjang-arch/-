@@ -30,10 +30,10 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private lateinit var tvDistance: TextView
     private lateinit var tvCalories: TextView
     private lateinit var tvGpsStatus: TextView
-    private lateinit var btnMap: TextView      // 수정됨
+    private lateinit var btnMap: TextView
     
     private lateinit var etMemo: EditText
-    private lateinit var btnSaveMemo: TextView // 수정됨
+    private lateinit var btnSaveMemo: TextView
     private lateinit var layoutMemos: LinearLayout
     
     private var gpsTracker: GalmaetgilGpsTracker? = null
@@ -41,7 +41,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // 화면을 가장 먼저 띄웁니다 (하얀 화면 방지)
         setContentView(R.layout.activity_main)
 
         try {
@@ -61,6 +60,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             initGpsSafe()
 
             loadMemos()
+            
             btnSaveMemo.setOnClickListener {
                 val text = etMemo.text.toString()
                 if (text.isNotEmpty()) {
@@ -83,6 +83,12 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                     Toast.makeText(this, "지도 앱을 열 수 없습니다.", Toast.LENGTH_SHORT).show()
                 }
             }
+
+            // 도장 화면으로 넘어가는 버튼 연결 추가
+            findViewById<TextView>(R.id.tabStamp).setOnClickListener {
+                startActivity(Intent(this, StampActivity::class.java))
+            }
+
         } catch (e: Exception) {
             e.printStackTrace()
         }
