@@ -206,6 +206,5 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:menu="@menu/bottom_nav_menu"
         android:background="@android:color/white"
-        app:itemIconTint="@color/black"
-        app:itemTextColor="@color/black" />
-</androidx.constraintlayout.widget.ConstraintLayout>
+        app:itemIconTint="@android:color/black"
+        app:itemTextColor="@android:color/black" />
