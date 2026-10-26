@@ -15,6 +15,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
         
+        <!-- 올바른 Client ID 적용 완료 -->
         <meta-data
             android:name="com.naver.maps.map.CLIENT_ID"
             android:value="nc59cc4zg0" />
