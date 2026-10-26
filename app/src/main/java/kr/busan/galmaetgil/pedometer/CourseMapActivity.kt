@@ -32,7 +32,6 @@ class CourseMapActivity : AppCompatActivity(), OnMapReadyCallback {
         NaverMapSdk.getInstance(this).client = NaverMapSdk.NcpKeyClient("nc59cc4zg0")
         setContentView(R.layout.activity_course_map)
 
-        // 위치 소스 초기화 (1초 간격 갱신)
         locationSource = FusedLocationSource(this, 1000)
 
         val fm = supportFragmentManager
@@ -52,12 +51,12 @@ class CourseMapActivity : AppCompatActivity(), OnMapReadyCallback {
         naverMap.locationSource = locationSource
         naverMap.uiSettings.isLocationButtonEnabled = true 
         
-        // 앱 실행 시 내 위치를 자동으로 추적하고 지도 중심을 맞춤
+        // 앱 실행 시 내 위치를 실시간으로 추적 및 표시
         naverMap.locationTrackingMode = LocationTrackingMode.Follow
 
         val courseId = intent.getStringExtra("COURSE_ID") ?: "1-1"
         
-        // 1-1, 2-1, 3-1 코스별 실제 해안/육지 산책로 경로 좌표 불러오기
+        // 각 코스별 실제 해안/육지 경로 좌표 불러오기
         val pathCoords = getCourseCoordinates(courseId)
 
         for (i in pathCoords.indices) {
@@ -81,35 +80,35 @@ class CourseMapActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    // 3개 코스 실제 좌표 데이터 정의 함수
+    // 1-1, 2-1, 3-1 코스별 실제 지형 맞춤형 좌표 데이터
     private fun getCourseCoordinates(courseId: String): List<LatLng> {
         return when (courseId) {
-            "1-1" -> listOf(
-                LatLng(35.1054, 129.1114), LatLng(35.1070, 129.1125), LatLng(35.1090, 129.1140),
-                LatLng(35.1110, 129.1155), LatLng(35.1130, 129.1170), LatLng(35.1150, 129.1185),
-                LatLng(35.1170, 129.1190), LatLng(35.1190, 129.1205), LatLng(35.1210, 129.1220),
-                LatLng(35.1230, 129.1235), LatLng(35.1250, 129.1240), LatLng(35.1270, 129.1255),
-                LatLng(35.1290, 129.1270), LatLng(35.1310, 129.1285), LatLng(35.1330, 129.1290),
-                LatLng(35.1350, 129.1305), LatLng(35.1370, 129.1320), LatLng(35.1390, 129.1335),
-                LatLng(35.1410, 129.1350), LatLng(35.1430, 129.1365)
+            "1-1" -> listOf( // 임랑해수욕장 ~ 기장군청 구간
+                LatLng(35.3267, 129.2818), LatLng(35.3200, 129.2800), LatLng(35.3130, 129.2780),
+                LatLng(35.3060, 129.2750), LatLng(35.2990, 129.2720), LatLng(35.2920, 129.2680),
+                LatLng(35.2850, 129.2640), LatLng(35.2780, 129.2600), LatLng(35.2710, 129.2550),
+                LatLng(35.2640, 129.2500), LatLng(35.2580, 129.2450), LatLng(35.2520, 129.2400),
+                LatLng(35.2460, 129.2350), LatLng(35.2410, 129.2310), LatLng(35.2360, 129.2280),
+                LatLng(35.2320, 129.2250), LatLng(35.2280, 129.2230), LatLng(35.2250, 129.2215),
+                LatLng(35.2220, 129.2205), LatLng(35.2200, 129.2200)
             )
-            "2-1" -> listOf(
-                LatLng(35.1593, 129.1758), LatLng(35.1610, 129.1770), LatLng(35.1630, 129.1790),
-                LatLng(35.1650, 129.1810), LatLng(35.1670, 129.1830), LatLng(35.1690, 129.1850),
-                LatLng(35.1710, 129.1870), LatLng(35.1730, 129.1890), LatLng(35.1750, 129.1910),
-                LatLng(35.1770, 129.1930), LatLng(35.1790, 129.1950), LatLng(35.1810, 129.1970),
-                LatLng(35.1830, 129.1990), LatLng(35.1850, 129.2010), LatLng(35.1870, 129.2030),
-                LatLng(35.1890, 129.2050), LatLng(35.1910, 129.2070), LatLng(35.1930, 129.2090),
-                LatLng(35.1950, 129.2110), LatLng(35.1970, 129.2130)
+            "2-1" -> listOf( // 미포 ~ 해운대 ~ 민락교 구간
+                LatLng(35.1610, 129.1670), LatLng(35.1600, 129.1640), LatLng(35.1590, 129.1610),
+                LatLng(35.1585, 129.1580), LatLng(35.1580, 129.1550), LatLng(35.1575, 129.1520),
+                LatLng(35.1565, 129.1500), LatLng(35.1555, 129.1525), LatLng(35.1550, 129.1550),
+                LatLng(35.1545, 129.1520), LatLng(35.1540, 129.1490), LatLng(35.1542, 129.1460),
+                LatLng(35.1545, 129.1430), LatLng(35.1550, 129.1400), LatLng(35.1565, 129.1375),
+                LatLng(35.1580, 129.1350), LatLng(35.1595, 129.1320), LatLng(35.1610, 129.1295),
+                LatLng(35.1625, 129.1275), LatLng(35.1640, 129.1260)
             )
-            "3-1" -> listOf(
-                LatLng(35.3195, 129.2750), LatLng(35.3210, 129.2765), LatLng(35.3230, 129.2780),
-                LatLng(35.3250, 129.2795), LatLng(35.3270, 129.2810), LatLng(35.3290, 129.2825),
-                LatLng(35.3310, 129.2840), LatLng(35.3330, 129.2855), LatLng(35.3350, 129.2870),
-                LatLng(35.3370, 129.2885), LatLng(35.3390, 129.2900), LatLng(35.3410, 129.2915),
-                LatLng(35.3430, 129.2930), LatLng(35.3450, 129.2945), LatLng(35.3470, 129.2960),
-                LatLng(35.3490, 129.2975), LatLng(35.3510, 129.2990), LatLng(35.3530, 129.3005),
-                LatLng(35.3550, 129.3020), LatLng(35.3570, 129.3035)
+            "3-1" -> listOf( // 오륙도 ~ 신선대 ~ 부산진시장 구간
+                LatLng(35.0936, 129.1175), LatLng(35.0980, 129.1150), LatLng(35.1020, 129.1130),
+                LatLng(35.1060, 129.1100), LatLng(35.1100, 129.1070), LatLng(35.1130, 129.1040),
+                LatLng(35.1160, 129.1010), LatLng(35.1180, 129.0980), LatLng(35.1200, 129.0950),
+                LatLng(35.1220, 129.0920), LatLng(35.1245, 129.0890), LatLng(35.1265, 129.0860),
+                LatLng(35.1285, 129.0830), LatLng(35.1300, 129.0800), LatLng(35.1315, 129.0765),
+                LatLng(35.1330, 129.0730), LatLng(35.1345, 129.0695), LatLng(35.1360, 129.0660),
+                LatLng(35.1370, 129.0630), LatLng(35.1380, 129.0605)
             )
             else -> listOf(LatLng(35.1054, 129.1114))
         }
