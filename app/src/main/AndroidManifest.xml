@@ -23,5 +23,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- 새로 추가된 도장 화면 등록 -->
+        <activity android:name=".StampActivity" />
+        
     </application>
 </manifest>
