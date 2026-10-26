@@ -1,8 +1,8 @@
-name: Build Galmaetgil Senior Pedometer APK
+name: build
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "master" ]
 
 jobs:
   build:
@@ -18,22 +18,11 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Gradle Wrapper를 버전 8.6으로 강제 변경
-      run: |
-        mkdir -p gradle/wrapper
-        echo "distributionBase=GRADLE_USER_HOME" > gradle/wrapper/gradle-wrapper.properties
-        echo "distributionPath=wrapper/dists" >> gradle/wrapper/gradle-wrapper.properties
-        echo "distributionUrl=https\://services.gradle.org/distributions/gradle-8.6-bin.zip" >> gradle/wrapper/gradle-wrapper.properties
-        echo "zipStoreBase=GRADLE_USER_HOME" >> gradle/wrapper/gradle-wrapper.properties
-        echo "zipStorePath=wrapper/dists" >> gradle/wrapper/gradle-wrapper.properties
-        gradle wrapper --gradle-version 8.6 || true
-        chmod +x gradlew || true
-
-    - name: 디버그 APK 빌드하기
-      run: ./gradlew assembleDebug --no-daemon
+    - name: 디버그 APK 자동 빌드하기 (에러 방지용)
+      run: gradle assembleDebug --no-daemon
 
     - name: APK 파일 업로드 (Artifacts)
       uses: actions/upload-artifact@v4
       with:
-        name: Galmaetgil-Senior-Pedometer-APK
+        name: app-debug
         path: app/build/outputs/apk/debug/app-debug.apk
