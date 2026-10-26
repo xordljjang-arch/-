@@ -192,7 +192,6 @@
                         android:textColor="#0277BD"
                         android:textSize="13sp"
                         android:layout_centerVertical="true"/>
-                    <!-- Button 대신 안전한 TextView 버튼 사용 -->
                     <TextView
                         android:id="@+id/btnMap"
                         android:layout_width="wrap_content"
@@ -273,7 +272,8 @@
         android:weightSum="4">
         
         <TextView android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:text="오늘걸음" android:textColor="#111" android:background="#FFCA28" android:gravity="center" android:textStyle="bold"/>
-        <TextView android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:text="갈맷길도장" android:textColor="#FFF" android:gravity="center"/>
+        <!-- 아래 줄에 id가 추가되었습니다 -->
+        <TextView android:id="@+id/tabStamp" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:text="갈맷길도장" android:textColor="#FFF" android:gravity="center"/>
         <TextView android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:text="공정순위" android:textColor="#FFF" android:gravity="center"/>
         <TextView android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:text="제작원리" android:textColor="#FFF" android:gravity="center"/>
     </LinearLayout>
