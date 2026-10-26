@@ -12,7 +12,7 @@
         android:roundIcon="@android:drawable/sym_def_app_icon"
         android:label="부산 갈맷길 만보기"
         android:supportsRtl="true"
-        android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+        android:theme="@style/Theme.MaterialComponents.Light.NoActionBar"> <!-- ★ 이 부분을 수정했습니다 -->
 
         <meta-data
             android:name="com.naver.maps.map.CLIENT_ID"
