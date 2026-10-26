@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#F4F6F8"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="🗺️ 2-1구간 (오륙도~광안리) 도장판"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="#111"
+        android:paddingBottom="16dp"/>
+
+    <!-- 가상의 코스 지도 이미지 영역 -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:background="#BBDEFB"
+        android:text="[코스 이미지 표기 영역]\n실제 지형이나 코스 선형 이미지가 들어갑니다."
+        android:gravity="center"
+        android:textColor="#0277BD"
+        android:layout_marginBottom="16dp"/>
+
+    <TextView
+        android:id="@+id/tvStampStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="현재 달성: 0 / 20 개 (14개 이상 도장 발급)"
+        android:textSize="16sp"
+        android:textColor="#333"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="* 각 포인트 반경 500m 진입 시 자동 체크\n* 시작/끝 제외 총 14개만 모으면 완성!"
+        android:textSize="12sp"
+        android:textColor="#666"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- 20개 체크포인트 시각화 (5줄 x 4칸) -->
+    <GridView
+        android:id="@+id/gridCheckpoints"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:numColumns="4"
+        android:verticalSpacing="10dp"
+        android:horizontalSpacing="10dp"/>
+
+    <Button
+        android:id="@+id/btnCheckLocation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="현재 위치로 포인트 체크하기"
+        android:backgroundTint="#0277BD"
+        android:textColor="#FFF"
+        android:layout_marginTop="20dp"/>
+
+</LinearLayout>
