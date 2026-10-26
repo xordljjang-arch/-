@@ -19,7 +19,7 @@ class StampActivity : AppCompatActivity() {
     private lateinit var btnCheckLocation: Button
     private lateinit var gpsTracker: GalmaetgilGpsTracker
 
-    // 20개의 가상 체크포인트 좌표 (실제 서비스 시 각 코스별 위경도 입력)
+    // 20개의 가상 체크포인트 좌표
     private val checkpoints = List(20) { index -> 
         Pair(35.1500 + (index * 0.005), 129.1000 + (index * 0.005)) 
     }
@@ -59,7 +59,7 @@ class StampActivity : AppCompatActivity() {
                     latitude = checkpoints[i].first
                     longitude = checkpoints[i].second 
                 }
-                // 반경 500m 이내인지 계산
+                
                 if (myLoc.distanceTo(pointLoc) <= 500f) {
                     checkedStatus[i] = true
                     newChecked++
@@ -96,12 +96,13 @@ class StampActivity : AppCompatActivity() {
             tv.gravity = android.view.Gravity.CENTER
             tv.setPadding(10, 20, 10, 20)
             
+            // 오류가 발생했던 텍스트 색상 설정 코드 수정 완료
             if (checkedStatus[pos]) {
-                tv.setBackgroundColor(Color.parseColor("#4CAF50")) // 통과 시 초록색
-                tv.textColor = Color.WHITE
+                tv.setBackgroundColor(Color.parseColor("#4CAF50"))
+                tv.setTextColor(Color.WHITE)
             } else {
-                tv.setBackgroundColor(Color.parseColor("#E0E0E0")) // 미통과 시 회색
-                tv.textColor = Color.BLACK
+                tv.setBackgroundColor(Color.parseColor("#E0E0E0"))
+                tv.setTextColor(Color.BLACK)
             }
             return tv
         }
