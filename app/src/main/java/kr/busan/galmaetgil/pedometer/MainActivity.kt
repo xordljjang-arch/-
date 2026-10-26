@@ -24,38 +24,49 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-
-        prefs = getSharedPreferences("PedometerPrefs", Context.MODE_PRIVATE)
-        stepGoal = prefs.getInt("STEP_GOAL", 10000)
-
-        // 1. 자정 초기화 로직 (교차검증 완)
-        checkMidnightReset()
         
-        // 2. UI 세팅 및 하단 탭 전환
-        setupUI()
-        
-        // 3. 하루씩 자동으로 밀리는 7일 롤링 차트 (교차검증 완)
-        updateWeeklyChartUI()
+        // ★ 에러 추적을 위한 강력한 예외 처리 (앱 강제종료 방지)
+        try {
+            setContentView(R.layout.activity_main)
+
+            prefs = getSharedPreferences("PedometerPrefs", Context.MODE_PRIVATE)
+            stepGoal = prefs.getInt("STEP_GOAL", 10000)
+
+            checkMidnightReset()
+            setupUI()
+            updateWeeklyChartUI()
+        } catch (e: Exception) {
+            // 튕기는 대신 화면에 에러 원인을 텍스트로 출력합니다!
+            val errorView = TextView(this).apply {
+                text = "앱 실행 중 오류 발생 (화면을 캡쳐해서 알려주세요!):\n\n${e.stackTraceToString()}"
+                setTextColor(Color.RED)
+                setPadding(32, 32, 32, 32)
+                textSize = 12f
+            }
+            setContentView(errorView)
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        currentSteps = prefs.getInt("TODAY_STEPS", 0)
-        updateStepUI()
+        try {
+            currentSteps = prefs.getInt("TODAY_STEPS", 0)
+            updateStepUI()
+        } catch (e: Exception) {
+            // 무시
+        }
     }
 
-    // [핵심 교차검증 1] 자정이 지나면 오늘 걸음수를 어제 날짜로 저장하고, 오늘은 0으로 리셋
     private fun checkMidnightReset() {
         val todayStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-        val lastDate = prefs.getString("LAST_DATE", "")
+        // Null 예외 발생 가능성이 있던 부분을 가장 안전하게 수정했습니다.
+        val lastDate = prefs.getString("LAST_DATE", "") ?: "" 
 
         if (lastDate != todayStr) {
-            if (lastDate!!.isNotEmpty()) {
+            if (lastDate.isNotEmpty()) {
                 val yesterdaySteps = prefs.getInt("TODAY_STEPS", 0)
                 prefs.edit().putInt("HISTORY_$lastDate", yesterdaySteps).apply()
             }
-            // 새 날짜 갱신 및 0보 리셋
             prefs.edit().putInt("TODAY_STEPS", 0).putString("LAST_DATE", todayStr).apply()
             currentSteps = 0
         }
@@ -63,14 +74,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupUI() {
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_navigation)
-        bottomNav.selectedItemId = R.id.nav_today
+        bottomNav?.selectedItemId = R.id.nav_today
         
-        // 하단 탭 연동
-        bottomNav.setOnItemSelectedListener { item ->
+        bottomNav?.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.nav_today -> true
                 R.id.nav_stamp -> {
-                    // 갈맷길 도장 탭 클릭 시 기존 StampActivity로 즉시 이동
                     startActivity(Intent(this, StampActivity::class.java))
                     false 
                 }
@@ -78,8 +87,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // 목표 설정 기능 (클릭 시 변경)
-        findViewById<LinearLayout>(R.id.btnSetGoal).setOnClickListener {
+        findViewById<LinearLayout>(R.id.btnSetGoal)?.setOnClickListener {
             stepGoal += 1000
             if (stepGoal > 30000) stepGoal = 5000
             prefs.edit().putInt("STEP_GOAL", stepGoal).apply()
@@ -87,13 +95,12 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "목표가 ${stepGoal}보로 설정되었습니다.", Toast.LENGTH_SHORT).show()
         }
 
-        // 오늘 날짜 기준 한줄 메모 복구 및 저장 (자정 지나면 새 메모장으로 비워짐)
         val etMemo = findViewById<EditText>(R.id.etMemo)
         val todayStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-        etMemo.setText(prefs.getString("MEMO_$todayStr", ""))
+        etMemo?.setText(prefs.getString("MEMO_$todayStr", ""))
 
-        findViewById<Button>(R.id.btnSaveMemo).setOnClickListener {
-            prefs.edit().putString("MEMO_$todayStr", etMemo.text.toString()).apply()
+        findViewById<Button>(R.id.btnSaveMemo)?.setOnClickListener {
+            prefs.edit().putString("MEMO_$todayStr", etMemo?.text.toString()).apply()
             Toast.makeText(this, "오늘의 메모가 저장되었습니다.", Toast.LENGTH_SHORT).show()
         }
     }
@@ -109,23 +116,21 @@ class MainActivity : AppCompatActivity() {
         val distanceKm = currentSteps * 0.0007 
         val calories = currentSteps * 0.04 
 
-        tvStepCount.text = "$currentSteps / $stepGoal 보"
-        tvStepPercent.text = "${percent}% 달성"
-        tvDistance.text = String.format("%.2f km", distanceKm)
-        tvCalories.text = "${calories.toInt()} kcal"
-        tvGoalSteps.text = "${stepGoal}보"
+        tvStepCount?.text = "$currentSteps / $stepGoal 보"
+        tvStepPercent?.text = "${percent}% 달성"
+        tvDistance?.text = String.format("%.2f km", distanceKm)
+        tvCalories?.text = "${calories.toInt()} kcal"
+        tvGoalSteps?.text = "${stepGoal}보"
     }
 
-    // [핵심 교차검증 2] 그림과 동일하게 7개 항목을 나열하고 자동으로 밀어내는 차트 로직
     private fun updateWeeklyChartUI() {
         val layoutWeeklyChart = findViewById<LinearLayout>(R.id.layoutWeeklyChart)
-        layoutWeeklyChart.removeAllViews() // 초기화
+        layoutWeeklyChart?.removeAllViews()
 
         val format = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val dayFormat = SimpleDateFormat("E", Locale.KOREAN) // 월, 화, 수...
+        val dayFormat = SimpleDateFormat("E", Locale.KOREAN) 
         val cal = Calendar.getInstance()
         
-        // 기준점을 6일 전으로 세팅 (오늘이 항상 오른쪽 끝이 되도록 자동 밀어내기)
         cal.add(Calendar.DAY_OF_YEAR, -6)
 
         for (i in 0..6) {
@@ -133,7 +138,6 @@ class MainActivity : AppCompatActivity() {
             val dayStr = dayFormat.format(cal.time)
             val steps = if (i == 6) currentSteps else prefs.getInt("HISTORY_$dateStr", 0)
 
-            // 그림처럼 요일과 걸음수를 세로로 정렬하여 7칸 생성
             val column = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
@@ -143,7 +147,7 @@ class MainActivity : AppCompatActivity() {
             val tvSteps = TextView(this).apply {
                 text = if (steps > 999) "${steps/1000}k" else steps.toString()
                 textSize = 12f
-                setTextColor(Color.parseColor("#4CAF50")) // 녹색 텍스트
+                setTextColor(Color.parseColor("#4CAF50"))
                 gravity = Gravity.CENTER
             }
 
@@ -157,9 +161,8 @@ class MainActivity : AppCompatActivity() {
 
             column.addView(tvSteps)
             column.addView(tvDay)
-            layoutWeeklyChart.addView(column)
+            layoutWeeklyChart?.addView(column)
 
-            // 하루씩 밀기
             cal.add(Calendar.DAY_OF_YEAR, 1)
         }
     }
