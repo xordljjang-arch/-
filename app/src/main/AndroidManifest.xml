@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
@@ -12,27 +11,18 @@
         android:roundIcon="@android:drawable/sym_def_app_icon"
         android:label="부산 갈맷길 만보기"
         android:supportsRtl="true"
-        android:theme="@style/Theme.MaterialComponents.Light.NoActionBar"> <!-- ★ 이 부분을 수정했습니다 -->
+        android:theme="@style/Theme.AppCompat.Light.NoActionBar"> <!-- ★ 안전한 기본 테마로 복구 -->
 
-        <meta-data
-            android:name="com.naver.maps.map.CLIENT_ID"
-            android:value="nc59cc4zg0" />
+        <meta-data android:name="com.naver.maps.map.CLIENT_ID" android:value="nc59cc4zg0" />
+        <meta-data android:name="com.naver.maps.map.NCP_KEY_ID" android:value="nc59cc4zg0" />
 
-        <meta-data
-            android:name="com.naver.maps.map.NCP_KEY_ID"
-            android:value="nc59cc4zg0" />
-
-        <activity
-            android:name=".MainActivity"
-            android:exported="true">
+        <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity android:name=".StampActivity" />
         <activity android:name=".CourseMapActivity" />
-
     </application>
 </manifest>
