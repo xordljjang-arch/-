@@ -150,7 +150,7 @@ class MainActivity : AppCompatActivity() {
             val tvDay = TextView(this).apply {
                 text = dayStr
                 textSize = 14f
-                textStyle = android.graphics.Typeface.BOLD
+                setTypeface(null, android.graphics.Typeface.BOLD)
                 setPadding(0, 8, 0, 0)
                 gravity = Gravity.CENTER
             }
