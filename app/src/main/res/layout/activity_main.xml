@@ -6,20 +6,19 @@
     android:background="#F4F6F8"
     android:padding="16dp">
 
-    <!-- 상단 목표 설정 영역 -->
+    <!-- 상단 목표 설정 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:layout_marginBottom="24dp">
+        android:gravity="center_vertical">
         <TextView
             android:id="@+id/tvDailyGoal"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="일일 목표: 10,000보"
-            android:textSize="20sp"
+            android:textSize="18sp"
             android:textStyle="bold"
             android:textColor="#333333"/>
         <ImageButton
@@ -27,11 +26,9 @@
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@android:drawable/ic_menu_manage"
-            android:contentDescription="목표 설정" />
+            android:src="@android:drawable/ic_menu_manage" />
     </LinearLayout>
 
-    <!-- 현재 걸음 수 표시 -->
     <TextView
         android:id="@+id/tvStepCount"
         android:layout_width="match_parent"
@@ -41,16 +38,16 @@
         android:textStyle="bold"
         android:textColor="#0277BD"
         android:gravity="center"
+        android:layout_marginTop="16dp"
         android:layout_marginBottom="24dp"/>
 
-    <!-- 거리 및 칼로리 (시인성 확보를 위해 좌우 50%씩 분할) -->
+    <!-- 거리 및 칼로리 (시인성 확보 넓게 배치) -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:weightSum="2"
-        android:layout_marginBottom="32dp">
-        
+        android:layout_marginBottom="24dp">
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -59,12 +56,10 @@
             android:gravity="center"
             android:background="@android:color/white"
             android:padding="16dp"
-            android:layout_marginEnd="8dp"
-            android:elevation="2dp">
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="이동 거리" android:textSize="16sp"/>
-            <TextView android:id="@+id/tvDistance" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0.0 km" android:textSize="24sp" android:textStyle="bold" android:textColor="#333333" android:layout_marginTop="8dp"/>
+            android:layout_marginEnd="8dp">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="이동 거리" />
+            <TextView android:id="@+id/tvDistance" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0.0 km" android:textSize="20sp" android:textStyle="bold" android:textColor="#333" android:layout_marginTop="4dp"/>
         </LinearLayout>
-
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -73,31 +68,44 @@
             android:gravity="center"
             android:background="@android:color/white"
             android:padding="16dp"
-            android:layout_marginStart="8dp"
-            android:elevation="2dp">
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="소모 칼로리" android:textSize="16sp"/>
-            <TextView android:id="@+id/tvCalories" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0 kcal" android:textSize="24sp" android:textStyle="bold" android:textColor="#E64A19" android:layout_marginTop="8dp"/>
+            android:layout_marginStart="8dp">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="소모 칼로리" />
+            <TextView android:id="@+id/tvCalories" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0 kcal" android:textSize="20sp" android:textStyle="bold" android:textColor="#E64A19" android:layout_marginTop="4dp"/>
         </LinearLayout>
     </LinearLayout>
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="이번 주 걸음 통계"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="16dp"/>
 
     <!-- 주간 막대 그래프 영역 -->
-    <LinearLayout
-        android:id="@+id/chartContainer"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="200dp"
-        android:orientation="horizontal"
-        android:weightSum="7"
+        android:layout_height="220dp"
         android:background="@android:color/white"
-        android:padding="16dp"
-        android:elevation="2dp">
-        <!-- MainActivity.kt에서 동적으로 막대와 왕관을 그려넣습니다 -->
-    </LinearLayout>
+        android:padding="8dp"
+        android:layout_marginBottom="24dp">
+        
+        <LinearLayout
+            android:id="@+id/chartContainer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:weightSum="7"/>
+
+        <!-- 목표량 기준 빨간선 -->
+        <View
+            android:id="@+id/goalLine"
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:background="#FF0000" />
+    </FrameLayout>
+
+    <!-- 🌟 갈맷길 코스 이동 버튼 (핵심 기능 복구) -->
+    <Button
+        android:id="@+id/btnOpenGalmaetgil"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:text="🌊 갈맷길 코스 도장판 열기"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:backgroundTint="#0288D1"
+        android:textColor="#FFFFFF" />
+
 </LinearLayout>
