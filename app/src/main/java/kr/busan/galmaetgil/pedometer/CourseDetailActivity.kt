@@ -18,6 +18,7 @@ import com.naver.maps.map.CameraUpdate
 import com.naver.maps.map.LocationTrackingMode
 import com.naver.maps.map.MapView
 import com.naver.maps.map.NaverMap
+import com.naver.maps.map.NaverMapSdk
 import com.naver.maps.map.OnMapReadyCallback
 import com.naver.maps.map.overlay.Marker
 import com.naver.maps.map.overlay.PathOverlay
@@ -34,7 +35,6 @@ class CourseDetailActivity : AppCompatActivity(), OnMapReadyCallback, LocationLi
     private var checkpoints: List<Point> = emptyList()
     private lateinit var tvNextTarget: TextView
 
-    // 3개 코스 정밀 좌표
     private val courseData = mapOf(
         "1-1" to listOf(
             Point("1. 임랑해수욕장", 35.31900, 129.27702), Point("2. 칠암항", 35.30235, 129.26180),
@@ -54,129 +54,4 @@ class CourseDetailActivity : AppCompatActivity(), OnMapReadyCallback, LocationLi
             Point("1. 오륙도 스카이워크", 35.10580, 129.12320), Point("2. 백운포", 35.10540, 129.11210),
             Point("3. 신선대 섶자리", 35.10180, 129.10370), Point("4. 신선대 유원지", 35.10510, 129.10090),
             Point("5. 평화공원", 35.12780, 129.09630), Point("6. UN기념공원", 35.12770, 129.09880),
-            Point("7. 부산문화회관", 35.12930, 129.09550), Point("8. 소막마을", 35.13250, 129.07580),
-            Point("9. 자성대공원", 35.13620, 129.06260), Point("10. 부산진시장", 35.13680, 129.05920)
-        )
-    )
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        courseId = intent.getStringExtra("COURSE_ID") ?: "1-1"
-        checkpoints = courseData[courseId] ?: emptyList()
-
-        val rootLayout = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-
-        // 상단 목표 안내 텍스트
-        tvNextTarget = TextView(this).apply {
-            text = "🚩 $courseId 구간 GPS 스캔 중..."
-            textSize = 16f
-            setTextColor(Color.WHITE)
-            setBackgroundColor(Color.parseColor("#1565C0"))
-            setPadding(32, 48, 32, 48)
-        }
-        rootLayout.addView(tvNextTarget)
-
-        // 네이버 지도 화면 구성
-        mapView = MapView(this).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, 
-                LinearLayout.LayoutParams.MATCH_PARENT
-            )
-        }
-        rootLayout.addView(mapView)
-        setContentView(rootLayout)
-
-        mapView.onCreate(savedInstanceState)
-        mapView.getMapAsync(this)
-
-        locationSource = FusedLocationSource(this, 100)
-        locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-    }
-
-    override fun onMapReady(map: NaverMap) {
-        naverMap = map
-        naverMap.locationSource = locationSource
-        naverMap.locationTrackingMode = LocationTrackingMode.Follow // 내 위치 파란점 & 자동 스크롤
-
-        val latLngList = mutableListOf<LatLng>()
-        val prefs = getSharedPreferences("PedometerPrefs", Context.MODE_PRIVATE)
-
-        // 10개 체크포인트 마커 찍기 및 위경도 리스트 수집
-        for ((index, cp) in checkpoints.withIndex()) {
-            val position = LatLng(cp.lat, cp.lng)
-            latLngList.add(position)
-            
-            val isChecked = prefs.getBoolean("CP_${courseId.replace("-", "_")}_$index", false)
-
-            Marker().apply {
-                this.position = position
-                captionText = cp.name
-                iconTintColor = if (isChecked) Color.GREEN else Color.RED
-                this.map = naverMap
-            }
-        }
-
-        // 경로를 붉은 선으로 연결
-        if (latLngList.size >= 2) {
-            PathOverlay().apply {
-                coords = latLngList
-                color = Color.parseColor("#FF0000")
-                width = 15
-                outlineWidth = 2
-                this.map = naverMap
-            }
-            // 첫 번째 체크포인트로 카메라 이동
-            val cameraUpdate = CameraUpdate.scrollTo(latLngList[0])
-            naverMap.moveCamera(cameraUpdate)
-        }
-
-        startLocationTracking()
-    }
-
-    private fun startLocationTracking() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) return
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2000L, 2f, this)
-        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 2000L, 2f, this)
-    }
-
-    override fun onLocationChanged(location: Location) {
-        val prefs = getSharedPreferences("PedometerPrefs", Context.MODE_PRIVATE)
-        var nextTargetName = "모든 지점 통과 완료!"
-        var nextTargetDistance = 0f
-
-        for ((index, cp) in checkpoints.withIndex()) {
-            val results = FloatArray(1)
-            Location.distanceBetween(location.latitude, location.longitude, cp.lat, cp.lng, results)
-            val distance = results[0]
-            val prefKey = "CP_${courseId.replace("-", "_")}_$index"
-            val isChecked = prefs.getBoolean(prefKey, false)
-
-            if (!isChecked && distance <= 500) {
-                prefs.edit().putBoolean(prefKey, true).apply()
-                Toast.makeText(this, "✅ ${cp.name} 통과!", Toast.LENGTH_SHORT).show()
-                // 마커 색상 변경을 위해 지도를 새로고침해야 하지만 리소스 절약을 위해 토스트로 대체
-            }
-
-            if (!prefs.getBoolean(prefKey, false) && nextTargetName == "모든 지점 통과 완료!") {
-                nextTargetName = cp.name
-                nextTargetDistance = distance
-            }
-        }
-        tvNextTarget.text = if (nextTargetName == "모든 지점 통과 완료!") "🏆 완주를 축하합니다!" 
-                            else "🎯 다음 목표: $nextTargetName (${nextTargetDistance.toInt()}m)"
-    }
-
-    override fun onStart() { super.onStart(); mapView.onStart() }
-    override fun onResume() { super.onResume(); mapView.onResume() }
-    override fun onPause() { super.onPause(); mapView.onPause() }
-    override fun onSaveInstanceState(outState: Bundle) { super.onSaveInstanceState(outState); mapView.onSaveInstanceState(outState) }
-    override fun onStop() { super.onStop(); mapView.onStop() }
-    override fun onDestroy() { super.onDestroy(); mapView.onDestroy(); locationManager.removeUpdates(this) }
-    override fun onLowMemory() { super.onLowMemory(); mapView.onLowMemory() }
-    override fun onProviderEnabled(provider: String) {}
-    override fun onProviderDisabled(provider: String) {}
-    @Deprecated("Deprecated in Java")
-    override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
-
-    data class Point(val name: String, val lat: Double, val lng: Double)
-}
+            Point("7. 부산문화회관", 35.12930, 129.09550),
