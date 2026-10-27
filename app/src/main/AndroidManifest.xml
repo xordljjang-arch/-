@@ -2,7 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="kr.busan.galmaetgil.pedometer">
 
-    <!-- 필수 권한 설정 -->
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
@@ -13,19 +12,18 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
 
-        <!-- 1. 메인 만보기 화면 -->
+        <!-- ★ 네이버 지도 API 키 입력 (본인의 키로 변경) -->
+        <meta-data
+            android:name="com.naver.maps.map.CLIENT_ID"
+            android:value="nc59cc4zg0" />
+
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <!-- 2. 도장판 코스 목록 화면 -->
         <activity android:name=".StampActivity" />
-
-        <!-- 3. 코스 상세 추적 화면 -->
         <activity android:name=".CourseDetailActivity" />
-
     </application>
 </manifest>
