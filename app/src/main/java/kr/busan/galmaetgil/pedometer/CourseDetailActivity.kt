@@ -18,6 +18,7 @@ import com.naver.maps.map.CameraUpdate
 import com.naver.maps.map.LocationTrackingMode
 import com.naver.maps.map.MapView
 import com.naver.maps.map.NaverMap
+import com.naver.maps.map.NaverMapSdk
 import com.naver.maps.map.OnMapReadyCallback
 import com.naver.maps.map.overlay.Marker
 import com.naver.maps.map.overlay.PathOverlay
@@ -60,13 +61,17 @@ class CourseDetailActivity : AppCompatActivity(), OnMapReadyCallback, LocationLi
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // ★ 핵심 해결 코드: 네이버 클라우드 신규 콘솔(Maps) 전용 인증 방식 강제 지정 ★
+        NaverMapSdk.getInstance(this).client = NaverMapSdk.NcpKeyClient("nc59cc4zg0")
+
         courseId = intent.getStringExtra("COURSE_ID") ?: "1-1"
         checkpoints = courseData[courseId] ?: emptyList()
 
         val rootLayout = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
 
         tvNextTarget = TextView(this).apply {
-            text = "🚩 $courseId 구간 설정 중..."
+            text = "🚩 $courseId 구간 지도 로딩 완료!"
             textSize = 16f
             setTextColor(Color.WHITE)
             setBackgroundColor(Color.parseColor("#1565C0"))
