@@ -13,6 +13,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.lifecycle.lifecycleScope
+import com.google.gson.Gson
 import com.naver.maps.geometry.LatLng
 import com.naver.maps.map.CameraUpdate
 import com.naver.maps.map.LocationTrackingMode
@@ -23,6 +25,11 @@ import com.naver.maps.map.OnMapReadyCallback
 import com.naver.maps.map.overlay.Marker
 import com.naver.maps.map.overlay.PathOverlay
 import com.naver.maps.map.util.FusedLocationSource
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
 
 class CourseDetailActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener {
 
@@ -34,6 +41,11 @@ class CourseDetailActivity : AppCompatActivity(), OnMapReadyCallback, LocationLi
     private lateinit var courseId: String
     private var checkpoints: List<Point> = emptyList()
     private lateinit var tvNextTarget: TextView
+    private val markerList = mutableListOf<Marker>()
+    private val pathOverlay = PathOverlay()
+
+    private val CLIENT_ID = "nc59cc4zg0"
+    private val CLIENT_SECRET = "여기에_네이버클라우드_Directions5_Client_Secret을_입력하세요" 
 
     private val courseData = mapOf(
         "1-1" to listOf(
@@ -54,16 +66,14 @@ class CourseDetailActivity : AppCompatActivity(), OnMapReadyCallback, LocationLi
             Point("1. 오륙도 스카이워크", 35.10580, 129.12320), Point("2. 백운포", 35.10540, 129.11210),
             Point("3. 신선대 섶자리", 35.10180, 129.10370), Point("4. 신선대 유원지", 35.10510, 129.10090),
             Point("5. 평화공원", 35.12780, 129.09630), Point("6. UN기념공원", 35.12770, 129.09880),
-            Point("7. 부산문화회관", 35.12930, 129.09550), Point("8. 소막마을", 35.13250, 129.07580),
+            Point("7. 부산문화회관", 35.12930, 129.09550), Point("8. 소막마일", 35.13250, 129.07580),
             Point("9. 자성대공원", 35.13620, 129.06260), Point("10. 부산진시장", 35.13680, 129.05920)
         )
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // ★ 핵심 해결 코드: 네이버 클라우드 신규 콘솔(Maps) 전용 인증 방식 강제 지정 ★
-        NaverMapSdk.getInstance(this).client = NaverMapSdk.NcpKeyClient("nc59cc4zg0")
+        NaverMapSdk.getInstance(this).client = NaverMapSdk.NcpKeyClient(CLIENT_ID)
 
         courseId = intent.getStringExtra("COURSE_ID") ?: "1-1"
         checkpoints = courseData[courseId] ?: emptyList()
@@ -71,7 +81,7 @@ class CourseDetailActivity : AppCompatActivity(), OnMapReadyCallback, LocationLi
         val rootLayout = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
 
         tvNextTarget = TextView(this).apply {
-            text = "🚩 $courseId 구간 지도 로딩 완료!"
+            text = "🚩 $courseId 정밀 도보 경로 로딩 중..."
             textSize = 16f
             setTextColor(Color.WHITE)
             setBackgroundColor(Color.parseColor("#1565C0"))
@@ -100,36 +110,110 @@ class CourseDetailActivity : AppCompatActivity(), OnMapReadyCallback, LocationLi
         naverMap.locationSource = locationSource
         naverMap.locationTrackingMode = LocationTrackingMode.Follow
 
-        val latLngList = mutableListOf<LatLng>()
         val prefs = getSharedPreferences("PedometerPrefs", Context.MODE_PRIVATE)
+        markerList.clear()
 
         for ((index, cp) in checkpoints.withIndex()) {
             val position = LatLng(cp.lat, cp.lng)
-            latLngList.add(position)
-            
-            val isChecked = prefs.getBoolean("CP_${courseId.replace("-", "_")}_$index", false)
+            val prefKey = "CP_${courseId.replace("-", "_")}_$index"
+            val isChecked = prefs.getBoolean(prefKey, false)
 
-            Marker().apply {
+            val marker = Marker().apply {
                 this.position = position
                 captionText = cp.name
-                iconTintColor = if (isChecked) Color.GREEN else Color.RED
+                iconTintColor = if (isChecked) Color.parseColor("#4CAF50") else Color.parseColor("#E53935")
                 this.map = naverMap
             }
+            markerList.add(marker)
         }
 
-        if (latLngList.size >= 2) {
-            PathOverlay().apply {
-                coords = latLngList
-                color = Color.parseColor("#FF0000")
-                width = 15
-                outlineWidth = 2
-                this.map = naverMap
-            }
-            val cameraUpdate = CameraUpdate.scrollTo(latLngList[0])
+        if (checkpoints.isNotEmpty()) {
+            val cameraUpdate = CameraUpdate.scrollTo(LatLng(checkpoints[0].lat, checkpoints[0].lng))
             naverMap.moveCamera(cameraUpdate)
         }
 
+        // 인접 지점별 개별 순차 호출로 왜곡 없는 완벽한 곡선 경로 구축
+        fetchWalkingRoute()
+
         startLocationTracking()
+    }
+
+    private fun fetchWalkingRoute() {
+        lifecycleScope.launch(Dispatchers.IO) {
+            val fullRouteCoords = mutableListOf<LatLng>()
+            val client = OkHttpClient()
+
+            for (i in 0 until checkpoints.size - 1) {
+                val start = checkpoints[i]
+                val goal = checkpoints[i + 1]
+
+                val url = "https://naveropenapi.apigw.ntruss.com/map-direction/v1/driving?start=${start.lng},${start.lat}&goal=${goal.lng},${goal.lat}&option=traoptimal"
+
+                try {
+                    val request = Request.Builder()
+                        .url(url)
+                        .addHeader("X-NCP-APIGW-API-KEY-ID", CLIENT_ID)
+                        .addHeader("X-NCP-APIGW-API-KEY", CLIENT_SECRET)
+                        .build()
+
+                    val response = client.newCall(request).execute()
+                    if (response.isSuccessful) {
+                        val coords = parsePathFromJson(response.body?.string())
+                        if (coords.isNotEmpty()) {
+                            fullRouteCoords.addAll(coords)
+                        } else {
+                            fullRouteCoords.add(LatLng(start.lat, start.lng))
+                            fullRouteCoords.add(LatLng(goal.lat, goal.lng))
+                        }
+                    } else {
+                        fullRouteCoords.add(LatLng(start.lat, start.lng))
+                        fullRouteCoords.add(LatLng(goal.lat, goal.lng))
+                    }
+                } catch (e: Exception) {
+                    fullRouteCoords.add(LatLng(start.lat, start.lng))
+                    fullRouteCoords.add(LatLng(goal.lat, goal.lng))
+                }
+            }
+
+            withContext(Dispatchers.Main) {
+                if (fullRouteCoords.size >= 2) {
+                    pathOverlay.coords = fullRouteCoords
+                    pathOverlay.color = Color.parseColor("#1976D2")
+                    pathOverlay.width = 16
+                    pathOverlay.outlineWidth = 3
+                    pathOverlay.outlineColor = Color.WHITE
+                    pathOverlay.map = naverMap
+                }
+                tvNextTarget.text = "🚩 $courseId 구간 정밀 도보 탐방 시작"
+            }
+        }
+    }
+
+    private fun parsePathFromJson(json: String?): List<LatLng> {
+        val list = mutableListOf<LatLng>()
+        if (json == null) return list
+        try {
+            val gson = Gson()
+            val map = gson.fromJson(json, Map::class.java)
+            val route = map["route"] as? Map<*, *>
+            val traoptimal = route?.get("traoptimal") as? List<*>
+            if (!traoptimal.isNullOrEmpty()) {
+                val firstPath = traoptimal[0] as? Map<*, *>
+                val path = firstPath?.get("path") as? List<*>
+                if (path != null) {
+                    for (item in path) {
+                        if (item is List<*> && item.size >= 2) {
+                            val lng = (item[0] as Number).toDouble()
+                            val lat = (item[1] as Number).toDouble()
+                            list.add(LatLng(lat, lng))
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return list
     }
 
     private fun startLocationTracking() {
@@ -149,13 +233,16 @@ class CourseDetailActivity : AppCompatActivity(), OnMapReadyCallback, LocationLi
         for ((index, cp) in checkpoints.withIndex()) {
             val results = FloatArray(1)
             Location.distanceBetween(location.latitude, location.longitude, cp.lat, cp.lng, results)
-            val distance = results[0]
+            val distance = results[0] 
             val prefKey = "CP_${courseId.replace("-", "_")}_$index"
             val isChecked = prefs.getBoolean(prefKey, false)
 
-            if (!isChecked && distance <= 500) {
+            if (!isChecked && distance <= 40f) {
                 prefs.edit().putBoolean(prefKey, true).apply()
-                Toast.makeText(this, "✅ ${cp.name} 통과!", Toast.LENGTH_SHORT).show()
+                if (index < markerList.size) {
+                    markerList[index].iconTintColor = Color.parseColor("#4CAF50")
+                }
+                Toast.makeText(this, "🎉 [인증 완료] ${cp.name} 도달!", Toast.LENGTH_SHORT).show()
             }
 
             if (!prefs.getBoolean(prefKey, false) && nextTargetName == "모든 지점 통과 완료!") {
@@ -163,8 +250,12 @@ class CourseDetailActivity : AppCompatActivity(), OnMapReadyCallback, LocationLi
                 nextTargetDistance = distance
             }
         }
-        tvNextTarget.text = if (nextTargetName == "모든 지점 통과 완료!") "🏆 완주를 축하합니다!" 
-                            else "🎯 다음 목표: $nextTargetName (${nextTargetDistance.toInt()}m)"
+
+        tvNextTarget.text = if (nextTargetName == "모든 지점 통과 완료!") {
+            "🏆 부산 갈맷길 $courseId 구간 완주 성공!"
+        } else {
+            "🎯 다음 도보 목표: $nextTargetName (${nextTargetDistance.toInt()}m 남음)"
+        }
     }
 
     override fun onStart() { super.onStart(); mapView.onStart() }
