@@ -9,9 +9,7 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
         android:label="부산 갈맷길 만보기"
-        android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
 
@@ -26,7 +24,7 @@
         <!-- 2. 도장판 코스 목록 화면 -->
         <activity android:name=".StampActivity" />
 
-        <!-- 3. ★ 누락되었던 코스 상세 추적 화면 추가 ★ -->
+        <!-- 3. 코스 상세 추적 화면 -->
         <activity android:name=".CourseDetailActivity" />
 
     </application>
