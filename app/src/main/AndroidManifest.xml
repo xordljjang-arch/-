@@ -12,7 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
 
-        <!-- ★ 네이버 지도 API 키 입력 (본인의 키로 변경) -->
+        <!-- ★ 알려주신 네이버 지도 API 키 적용 완료 -->
         <meta-data
             android:name="com.naver.maps.map.CLIENT_ID"
             android:value="nc59cc4zg0" />
@@ -25,5 +25,6 @@
         </activity>
         <activity android:name=".StampActivity" />
         <activity android:name=".CourseDetailActivity" />
+
     </application>
 </manifest>
