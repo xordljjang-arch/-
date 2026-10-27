@@ -34,7 +34,6 @@ class CourseDetailActivity : AppCompatActivity(), OnMapReadyCallback, LocationLi
     private var checkpoints: List<Point> = emptyList()
     private lateinit var tvNextTarget: TextView
 
-    // 3개 코스 정밀 좌표
     private val courseData = mapOf(
         "1-1" to listOf(
             Point("1. 임랑해수욕장", 35.31900, 129.27702), Point("2. 칠암항", 35.30235, 129.26180),
@@ -67,7 +66,7 @@ class CourseDetailActivity : AppCompatActivity(), OnMapReadyCallback, LocationLi
         val rootLayout = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
 
         tvNextTarget = TextView(this).apply {
-            text = "🚩 $courseId 구간 GPS 스캔 중..."
+            text = "🚩 $courseId 구간 설정 중..."
             textSize = 16f
             setTextColor(Color.WHITE)
             setBackgroundColor(Color.parseColor("#1565C0"))
@@ -129,7 +128,10 @@ class CourseDetailActivity : AppCompatActivity(), OnMapReadyCallback, LocationLi
     }
 
     private fun startLocationTracking() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) return
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 101)
+            return
+        }
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2000L, 2f, this)
         locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 2000L, 2f, this)
     }
@@ -171,6 +173,6 @@ class CourseDetailActivity : AppCompatActivity(), OnMapReadyCallback, LocationLi
     override fun onProviderDisabled(provider: String) {}
     @Deprecated("Deprecated in Java")
     override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
-
-    data class Point(val name: String, val lat: Double, val lng: Double)
 }
+
+data class Point(val name: String, val lat: Double, val lng: Double)
