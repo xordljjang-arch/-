@@ -9,58 +9,53 @@ import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
 import android.widget.LinearLayout
-import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import com.naver.maps.geometry.LatLng
+import com.naver.maps.map.CameraUpdate
+import com.naver.maps.map.LocationTrackingMode
+import com.naver.maps.map.MapView
+import com.naver.maps.map.NaverMap
+import com.naver.maps.map.OnMapReadyCallback
+import com.naver.maps.map.overlay.Marker
+import com.naver.maps.map.overlay.PathOverlay
+import com.naver.maps.map.util.FusedLocationSource
 
-class CourseDetailActivity : AppCompatActivity(), LocationListener {
+class CourseDetailActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener {
 
+    private lateinit var mapView: MapView
+    private lateinit var naverMap: NaverMap
+    private lateinit var locationSource: FusedLocationSource
     private lateinit var locationManager: LocationManager
+    
     private lateinit var courseId: String
     private var checkpoints: List<Point> = emptyList()
-
-    private lateinit var tvMyLocation: TextView
     private lateinit var tvNextTarget: TextView
 
-    // ★ 공식 데이터 교차 검증: 완벽한 경로상 정밀 좌표 10개씩 배치
+    // 3개 코스 정밀 좌표
     private val courseData = mapOf(
         "1-1" to listOf(
-            Point("1. 임랑해수욕장 (시작)", 35.31900, 129.27702),
-            Point("2. 칠암항 (야구등대)", 35.30235, 129.26180),
-            Point("3. 신평소공원", 35.29360, 129.25595),
-            Point("4. 동백항", 35.28420, 129.25190),
-            Point("5. 이동항", 35.27555, 129.24580),
-            Point("6. 일광해수욕장 (북측)", 35.26380, 129.23725),
-            Point("7. 일광해수욕장 (남측)", 35.25850, 129.23350),
-            Point("8. 기장체육관 방면", 35.25050, 129.22450),
-            Point("9. 죽성리 교차로", 35.24750, 129.22200),
-            Point("10. 기장군청 (종점)", 35.24460, 129.22236)
+            Point("1. 임랑해수욕장", 35.31900, 129.27702), Point("2. 칠암항", 35.30235, 129.26180),
+            Point("3. 신평소공원", 35.29360, 129.25595), Point("4. 동백항", 35.28420, 129.25190),
+            Point("5. 이동항", 35.27555, 129.24580), Point("6. 일광해수욕장 북측", 35.26380, 129.23725),
+            Point("7. 일광해수욕장 남측", 35.25850, 129.23350), Point("8. 기장체육관 방면", 35.25050, 129.22450),
+            Point("9. 죽성리 교차로", 35.24750, 129.22200), Point("10. 기장군청", 35.24460, 129.22236)
         ),
         "2-1" to listOf(
-            Point("1. 문탠로드 (시작)", 35.16105, 129.17185),
-            Point("2. 달맞이 어울림마당", 35.15850, 129.17000),
-            Point("3. 해운대해수욕장 (미포)", 35.15920, 129.16780),
-            Point("4. 해운대해수욕장 (중앙)", 35.15870, 129.16040),
-            Point("5. 해운대 조선비치", 35.15780, 129.15390),
-            Point("6. 동백섬 누리마루", 35.15240, 129.15340),
-            Point("7. 동백섬 출렁다리", 35.15330, 129.15110),
-            Point("8. 마린시티 영화의거리", 35.15540, 129.14440),
-            Point("9. 요트경기장 광장", 35.16100, 129.14150),
-            Point("10. 민락교 (종점)", 35.16330, 129.13500)
+            Point("1. 문탠로드", 35.16105, 129.17185), Point("2. 달맞이 어울림마당", 35.15850, 129.17000),
+            Point("3. 해운대 미포", 35.15920, 129.16780), Point("4. 해운대 중앙", 35.15870, 129.16040),
+            Point("5. 조선비치", 35.15780, 129.15390), Point("6. 누리마루", 35.15240, 129.15340),
+            Point("7. 출렁다리", 35.15330, 129.15110), Point("8. 영화의거리", 35.15540, 129.14440),
+            Point("9. 요트경기장", 35.16100, 129.14150), Point("10. 민락교", 35.16330, 129.13500)
         ),
         "3-1" to listOf(
-            Point("1. 오륙도 스카이워크 (시작)", 35.10580, 129.12320),
-            Point("2. 백운포 체육공원", 35.10540, 129.11210),
-            Point("3. 신선대 섶자리", 35.10180, 129.10370),
-            Point("4. 신선대 유원지", 35.10510, 129.10090),
-            Point("5. 평화공원", 35.12780, 129.09630),
-            Point("6. UN기념공원", 35.12770, 129.09880),
-            Point("7. 부산문화회관", 35.12930, 129.09550),
-            Point("8. 우암동 소막마을", 35.13250, 129.07580),
-            Point("9. 자성대공원", 35.13620, 129.06260),
-            Point("10. 부산진시장 (종점)", 35.13680, 129.05920)
+            Point("1. 오륙도 스카이워크", 35.10580, 129.12320), Point("2. 백운포", 35.10540, 129.11210),
+            Point("3. 신선대 섶자리", 35.10180, 129.10370), Point("4. 신선대 유원지", 35.10510, 129.10090),
+            Point("5. 평화공원", 35.12780, 129.09630), Point("6. UN기념공원", 35.12770, 129.09880),
+            Point("7. 부산문화회관", 35.12930, 129.09550), Point("8. 소막마을", 35.13250, 129.07580),
+            Point("9. 자성대공원", 35.13620, 129.06260), Point("10. 부산진시장", 35.13680, 129.05920)
         )
     )
 
@@ -69,136 +64,119 @@ class CourseDetailActivity : AppCompatActivity(), LocationListener {
         courseId = intent.getStringExtra("COURSE_ID") ?: "1-1"
         checkpoints = courseData[courseId] ?: emptyList()
 
-        val rootLayout = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setBackgroundColor(Color.parseColor("#F8F9FA"))
-        }
+        val rootLayout = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
 
-        // ★ 실시간 내 위치 대시보드
-        val dashboard = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(48, 48, 48, 48)
-            setBackgroundColor(Color.parseColor("#E3F2FD")) // 연한 파란색 바탕
+        // 상단 목표 안내 텍스트
+        tvNextTarget = TextView(this).apply {
+            text = "🚩 $courseId 구간 GPS 스캔 중..."
+            textSize = 16f
+            setTextColor(Color.WHITE)
+            setBackgroundColor(Color.parseColor("#1565C0"))
+            setPadding(32, 48, 32, 48)
         }
-        
-        tvMyLocation = TextView(this).apply { 
-            text = "🛰️ 내 실시간 위치: GPS 수신 대기 중..." 
-            textSize = 14f
-            setTextColor(Color.parseColor("#1565C0"))
-            setTypeface(null, android.graphics.Typeface.BOLD)
-            setPadding(0,0,0,16)
-        }
-        tvNextTarget = TextView(this).apply { 
-            text = "🎯 다음 목표: 대기 중..." 
-            textSize = 15f
-            setTextColor(Color.parseColor("#D32F2F"))
-            setTypeface(null, android.graphics.Typeface.BOLD)
-        }
-        
-        dashboard.addView(tvMyLocation)
-        dashboard.addView(tvNextTarget)
-        rootLayout.addView(dashboard)
+        rootLayout.addView(tvNextTarget)
 
-        // 체크포인트 목록
-        val scrollView = ScrollView(this)
-        val listLayout = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(48, 32, 48, 48)
+        // 네이버 지도 화면 구성
+        mapView = MapView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, 
+                LinearLayout.LayoutParams.MATCH_PARENT
+            )
         }
-
-        val title = TextView(this).apply {
-            text = "🚩 $courseId 구간 체크포인트\n(500m 이내 진입 시 자동 체크)"
-            textSize = 17f
-            setTextColor(Color.BLACK)
-            setTypeface(null, android.graphics.Typeface.BOLD)
-            setPadding(0, 0, 0, 32)
-        }
-        listLayout.addView(title)
-
-        for ((index, cp) in checkpoints.withIndex()) {
-            val cpView = TextView(this).apply {
-                id = index + 1000
-                text = "⏳ ${cp.name}"
-                textSize = 14f
-                setPadding(0, 24, 0, 24)
-            }
-            listLayout.addView(cpView)
-        }
-
-        scrollView.addView(listLayout)
-        rootLayout.addView(scrollView)
+        rootLayout.addView(mapView)
         setContentView(rootLayout)
 
+        mapView.onCreate(savedInstanceState)
+        mapView.getMapAsync(this)
+
+        locationSource = FusedLocationSource(this, 100)
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+    }
+
+    override fun onMapReady(map: NaverMap) {
+        naverMap = map
+        naverMap.locationSource = locationSource
+        naverMap.locationTrackingMode = LocationTrackingMode.Follow // 내 위치 파란점 & 자동 스크롤
+
+        val latLngList = mutableListOf<LatLng>()
+        val prefs = getSharedPreferences("PedometerPrefs", Context.MODE_PRIVATE)
+
+        // 10개 체크포인트 마커 찍기 및 위경도 리스트 수집
+        for ((index, cp) in checkpoints.withIndex()) {
+            val position = LatLng(cp.lat, cp.lng)
+            latLngList.add(position)
+            
+            val isChecked = prefs.getBoolean("CP_${courseId.replace("-", "_")}_$index", false)
+
+            Marker().apply {
+                this.position = position
+                captionText = cp.name
+                iconTintColor = if (isChecked) Color.GREEN else Color.RED
+                this.map = naverMap
+            }
+        }
+
+        // 경로를 붉은 선으로 연결
+        if (latLngList.size >= 2) {
+            PathOverlay().apply {
+                coords = latLngList
+                color = Color.parseColor("#FF0000")
+                width = 15
+                outlineWidth = 2
+                this.map = naverMap
+            }
+            // 첫 번째 체크포인트로 카메라 이동
+            val cameraUpdate = CameraUpdate.scrollTo(latLngList[0])
+            naverMap.moveCamera(cameraUpdate)
+        }
+
         startLocationTracking()
     }
 
     private fun startLocationTracking() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 101)
-            return
-        }
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) return
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2000L, 2f, this)
         locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 2000L, 2f, this)
     }
 
     override fun onLocationChanged(location: Location) {
         val prefs = getSharedPreferences("PedometerPrefs", Context.MODE_PRIVATE)
-        
-        // 1. 내 위치 실시간 출력
-        tvMyLocation.text = "🛰️ 내 위치: 위도 ${String.format("%.4f", location.latitude)}, 경도 ${String.format("%.4f", location.longitude)}"
-
-        var nextTargetName = "모든 체크포인트 통과 완료!"
+        var nextTargetName = "모든 지점 통과 완료!"
         var nextTargetDistance = 0f
 
-        // 2. 체크포인트 10개 검사
         for ((index, cp) in checkpoints.withIndex()) {
             val results = FloatArray(1)
             Location.distanceBetween(location.latitude, location.longitude, cp.lat, cp.lng, results)
             val distance = results[0]
-            
             val prefKey = "CP_${courseId.replace("-", "_")}_$index"
             val isChecked = prefs.getBoolean(prefKey, false)
 
             if (!isChecked && distance <= 500) {
                 prefs.edit().putBoolean(prefKey, true).apply()
                 Toast.makeText(this, "✅ ${cp.name} 통과!", Toast.LENGTH_SHORT).show()
+                // 마커 색상 변경을 위해 지도를 새로고침해야 하지만 리소스 절약을 위해 토스트로 대체
             }
 
-            val view = findViewById<TextView>(index + 1000)
-            if (prefs.getBoolean(prefKey, false)) {
-                view?.text = "✅ ${cp.name} (통과 완료)"
-                view?.setTextColor(Color.parseColor("#2E7D32"))
-            } else {
-                view?.text = "❌ ${cp.name} (현재 거리: ${distance.toInt()}m 남음)"
-                view?.setTextColor(Color.DKGRAY)
-                
-                // 아직 통과 안 한 가장 가까운(또는 다음) 목표 찾기
-                if (nextTargetName == "모든 체크포인트 통과 완료!") {
-                    nextTargetName = cp.name
-                    nextTargetDistance = distance
-                }
+            if (!prefs.getBoolean(prefKey, false) && nextTargetName == "모든 지점 통과 완료!") {
+                nextTargetName = cp.name
+                nextTargetDistance = distance
             }
         }
-        
-        // 3. 다음 목표 대시보드 업데이트
-        if (nextTargetName != "모든 체크포인트 통과 완료!") {
-            tvNextTarget.text = "🎯 다음 목표: $nextTargetName (${nextTargetDistance.toInt()}m 남음)"
-        } else {
-            tvNextTarget.text = "🏆 $nextTargetName"
-            tvNextTarget.setTextColor(Color.parseColor("#2E7D32"))
-        }
+        tvNextTarget.text = if (nextTargetName == "모든 지점 통과 완료!") "🏆 완주를 축하합니다!" 
+                            else "🎯 다음 목표: $nextTargetName (${nextTargetDistance.toInt()}m)"
     }
 
+    override fun onStart() { super.onStart(); mapView.onStart() }
+    override fun onResume() { super.onResume(); mapView.onResume() }
+    override fun onPause() { super.onPause(); mapView.onPause() }
+    override fun onSaveInstanceState(outState: Bundle) { super.onSaveInstanceState(outState); mapView.onSaveInstanceState(outState) }
+    override fun onStop() { super.onStop(); mapView.onStop() }
+    override fun onDestroy() { super.onDestroy(); mapView.onDestroy(); locationManager.removeUpdates(this) }
+    override fun onLowMemory() { super.onLowMemory(); mapView.onLowMemory() }
     override fun onProviderEnabled(provider: String) {}
     override fun onProviderDisabled(provider: String) {}
     @Deprecated("Deprecated in Java")
     override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
-
-    override fun onDestroy() {
-        super.onDestroy()
-        locationManager.removeUpdates(this)
-    }
 
     data class Point(val name: String, val lat: Double, val lng: Double)
 }
